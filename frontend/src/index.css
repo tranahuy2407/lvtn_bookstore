@@ -1,0 +1,20 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+input[type="password"],input[type="email"],[type="text"]{
+    @apply w-full border my-1 py-2 px-3 rounded-full;
+
+}
+#search{
+    @apply my-0 py-2 px-2 h-12 rounded outline-none w-1/2
+}
+#login{
+    @apply p-2 w-full text-white rounded-2xl;
+    background-color: #F5385D;
+}
+.cart-quantity-input {
+    @apply w-16 text-center border border-gray-300 rounded-md py-2 mx-2 focus:outline-none focus:border-blue-500;
+  }
