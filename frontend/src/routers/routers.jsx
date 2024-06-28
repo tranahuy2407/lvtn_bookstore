@@ -19,7 +19,20 @@ import ShopByCategory from "../shop_by_category/ShopByCategory";
 import Search from "../components/Search";
 import ShopByPromotion from "../shop_by_category/ShopByPromotion";
 import OrderDetail from "../components/OderDetail";
-
+import Products from "../admin/components/Products";
+import AddProduct from "../admin/components/AddProduct";
+import Publishers from "../admin/components/Publishers";
+import AddPublisher from "../admin/components/AddPublishers";
+import Categories from "../admin/components/Categories";
+import EditPublisherForm from "../admin/components/UpdatePublisher";
+import AddCategory from "../admin/components/AddCategories";
+import UpdateCategory from "../admin/components/UpdateCategory";
+import Order from "../admin/components/Orders";
+import Promotions from "../admin/components/Promotions";
+import AddPromotion from "../admin/components/AddPromotion";
+import Authors from "../admin/components/Authors";
+import AddAuthor from "../admin/components/AddAuthor";
+import UpdateAuthor from "../admin/components/UpdateAuthor";
 
 const router = createBrowserRouter([
   {
@@ -102,19 +115,78 @@ const router = createBrowserRouter([
             path:"/search",
             element: <Search/>
         },
-        {
-            path:"/admin/dashboard",
-            element: <DashBoardLayout/>,
-            children: [ 
-                {
-                    path:"/admin/dashboard",
-                    element: <DashBoard/>
-                },
-               
-            ]
-        }
+      
     ]
   },
+  {
+    path:"/admin/dashboard",
+    element: <DashBoardLayout/>,
+    children: [
+        {
+            path:"/admin/dashboard",
+            element: <DashBoard/>
+        },
+
+        {
+            path:"/admin/dashboard/products",
+            element: <Products/>
+        },
+
+        {
+            path: "/admin/dashboard/add-product",
+            element: <AddProduct /> 
+        },
+        {
+            path:"/admin/dashboard/publishers",
+            element: <Publishers />
+        },
+
+        {
+            path:"/admin/dashboard/addpublishers",
+            element: <AddPublisher />
+        },
+        {
+            path: "/admin/dashboard/updatepublishers/:id",
+            element: <EditPublisherForm /> 
+        },
+        {
+            path:"/admin/dashboard/categories",
+            element: <Categories />
+        },
+        {
+            path:"/admin/dashboard/addcategories",
+            element: <AddCategory />
+        },
+        {
+            path: "/admin/dashboard/updatecategory/:categoryId",
+            element: <UpdateCategory /> 
+        },
+        {
+            path:"/admin/dashboard/orders",
+            element: <Order />
+        },
+        {
+            path:"/admin/dashboard/promotions",
+            element: <Promotions />
+        },
+        {
+            path:"/admin/dashboard/addpromotion",
+            element: <AddPromotion />
+        },
+        {
+            path:"/admin/dashboard/authors",
+            element: <Authors />
+        },
+        {
+            path:"/admin/dashboard/addauthors",
+            element: <AddAuthor />
+        },
+        {
+            path: "/admin/dashboard/updateauthor/:authorId",
+            element: <UpdateAuthor /> 
+        },
+    ]
+}
 ]);
 
 export default router;

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 
 @tailwind base;
 @tailwind components;
@@ -18,3 +20,20 @@ input[type="password"],input[type="email"],[type="text"]{
 .cart-quantity-input {
     @apply w-16 text-center border border-gray-300 rounded-md py-2 mx-2 focus:outline-none focus:border-blue-500;
   }
+
+  @layer base {
+	
+	table {
+	}
+	th,
+	td {
+		@apply py-3 px-2.5 text-sm text-left border-y border-gray-200;
+	}
+	thead {
+		@apply bg-neutral-100;
+	}
+	th {
+		@apply font-semibold;
+	}
+
+}

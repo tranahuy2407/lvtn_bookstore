@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { booksSchema } = require("./book");
+const { defaults } = require("autoprefixer");
 
 const orderSchema = mongoose.Schema({
   books: [
@@ -43,6 +44,19 @@ const orderSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  description: {
+    type: String,
+    default: "",
+  },
+});
+
+orderSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 const Order = mongoose.model("Order", orderSchema);

@@ -124,4 +124,18 @@ userRouter.get('/api/orders/me/:userId', async (req, res) => {
   }
 });
 
+//lấy tên theo id
+userRouter.get("/api/getusername/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ name: user.name });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user name", error });
+  }
+});
+
 module.exports = userRouter;

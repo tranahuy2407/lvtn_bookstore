@@ -13,7 +13,7 @@ promotionRouter.get("/check-gift", async (req, res) => {
 
     const gift = await Gift.findOne({ gift_price: { $lte: finalPrice } })
                            .sort({ gift_price: -1 });
-    console.log(gift);
+
     if (!gift) {
       return res.status(200).json({ message: "Không có quà tặng phù hợp" });
     }
@@ -39,7 +39,7 @@ promotionRouter.get("/promotion/books", async (req, res) => {
   }
 });
 
-
+//lấy tát cả chương trình giảm giá
 promotionRouter.get("/api/promotions", async (req, res) => {
   try {
     const promotions = await Promotion.find();
@@ -50,6 +50,57 @@ promotionRouter.get("/api/promotions", async (req, res) => {
   }
 });
 
+//lay khuyen mai theo id
+promotionRouter.get("/api/promotion/:id", async (req, res) => {
+  const promotionId = req.params.id;
 
+  try {
+    const promotion = await Promotion.findById(promotionId);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Không tìm thấy khuyến mãi" });
+    }
+
+    res.json(promotion);
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin khuyến mãi:", error);
+    res.status(500).json({ message: "Đã xảy ra lỗi máy chủ" });
+  }
+});
+
+//thêm mới khuyến mãi
+promotionRouter.post("/api/addpromotion", async (req, res) => {
+  const {
+      description,
+      image,
+      type,
+      code,
+      value,
+      conditional,
+      limit,
+      start_day,
+      end_day
+  } = req.body;
+
+  try {
+      const newPromotion = new Promotion({
+          description,
+          image,
+          type,
+          code,
+          value,
+          conditional,
+          limit,
+          start_day,
+          end_day
+      });
+
+      await newPromotion.save();
+      res.status(201).json({ message: "Thêm thành công" });
+  } catch (error) {
+      console.error("Lỗi không thể thêm khuyến mãi:", error);
+      res.status(500).json({ message: "Lỗi server" });
+  }
+});
 
 module.exports = promotionRouter;

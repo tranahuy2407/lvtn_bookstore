@@ -13,6 +13,10 @@ const Checkout = () => {
     totalPrice,
     clearCart,
   } = useContext(CartContext);
+
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -21,23 +25,57 @@ const Checkout = () => {
   const [ward, setWard] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const { user } = useContext(UserContext);
   const [userId, setUserId] = useState("");
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [gift, setGift] = useState(null);
-  const [useDefaultAddress, setUseDefaultAddress] = useState(true); 
+  const [useDefaultAddress, setUseDefaultAddress] = useState(true);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [provinceCost, setProvinceCost] = useState("");
 
+  // Hàm để tách tỉnh từ địa chỉ
+  const extractProvince = (address) => {
+    const lastCommaIndex = address.lastIndexOf(',');
+    if (lastCommaIndex !== -1) {
+      return address.slice(lastCommaIndex + 1).trim();
+    }
+    return address;
+  };
+
+  // Lấy thông tin người dùng từ UserContext khi component mount
   useEffect(() => {
     if (user) {
       setUserId(user._id);
-      setFullName(user.name); 
+      setFullName(user.name);
       setPhone(user.phone);
       setAddress(user.address);
+      setProvinceCost(extractProvince(user.address));
     }
   }, [user]);
 
+  // Tính phí vận chuyển khi có tỉnh hoặc địa chỉ mặc định thay đổi
+  useEffect(() => {
+    const provinceToUse = useDefaultAddress ? provinceCost : province?.full_name;
+    if (provinceToUse) {
+      fetch(`http://localhost:5000/shipping-cost/${provinceToUse}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.cost) {
+            setShippingCost(data.cost);
+          } else {
+            setShippingCost(0);
+            setErrorMessage("Không tìm thấy thông tin vận chuyển cho tỉnh này.");
+          }
+        })
+        .catch((error) => {
+          console.error("Lỗi khi lấy thông tin vận chuyển:", error);
+          setErrorMessage("Đã xảy ra lỗi khi lấy thông tin vận chuyển.");
+        });
+    }
+  }, [province, useDefaultAddress]);
+
+  // Lấy danh sách tỉnh thành khi component mount
   useEffect(() => {
     fetch("https://esgoo.net/api-tinhthanh/1/0.htm")
       .then((response) => response.json())
@@ -53,6 +91,7 @@ const Checkout = () => {
       });
   }, []);
 
+  // Xử lý thay đổi tỉnh
   const handleProvinceChange = (e) => {
     const selectedProvince = provinces.find(
       (province) => province.full_name === e.target.value
@@ -74,6 +113,7 @@ const Checkout = () => {
       });
   };
 
+  // Xử lý thay đổi quận/huyện
   const handleDistrictChange = (e) => {
     const selectedDistrict = districts.find(
       (district) => district.full_name === e.target.value
@@ -95,10 +135,12 @@ const Checkout = () => {
       });
   };
 
+  // Xử lý thay đổi phường/xã
   const handleWardChange = (e) => {
     setWard(e.target.value);
   };
 
+  // Kiểm tra quà tặng khi tổng giá thay đổi
   useEffect(() => {
     fetch(`http://localhost:5000/check-gift?finalPrice=${totalPrice}`)
       .then((response) => response.json())
@@ -115,6 +157,7 @@ const Checkout = () => {
       });
   }, [totalPrice]);
 
+  // Xử lý submit form thanh toán
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -154,8 +197,8 @@ const Checkout = () => {
           },
           quantity: item.cartQuantity,
         })),
-        totalPrice,
-        address: `${address}, ${ward}, ${district.full_name}, ${province.full_name}`,
+        totalPrice: finalPrice + shippingCost,
+        address: useDefaultAddress ? user.address : `${address}, ${ward}, ${district.full_name}, ${province.full_name}`,
         paymentMethod,
         discountCode: discountCode ? discountCode.code : null,
         phone,
@@ -174,18 +217,17 @@ const Checkout = () => {
     }
   };
 
+  // Chọn sử dụng địa chỉ mặc định
   const handleUseDefaultAddress = () => {
     setUseDefaultAddress(true);
   };
 
+  // Chọn sử dụng địa chỉ khác
   const handleUseCustomAddress = () => {
     setUseDefaultAddress(false);
   };
 
-  const navigate = useNavigate();
-
   const finalPrice = discountApplied ? discountedPrice : totalPrice;
-
   return (
     <div className="relative mx-auto w-full bg-white mt-28">
       <div className="grid min-h-screen grid-cols-10">
@@ -436,21 +478,25 @@ const Checkout = () => {
         </ul>
             <div className="my-5 h-0.5 w-full bg-white bg-opacity-30"></div>
             <div className="space-y-2">
+            <p className="flex justify-between text-lg font-bold text-white">
+                <span>Phí vận chuyển (ship):</span>
+                <span>{shippingCost} VNĐ</span>
+              </p>
               <p className="flex justify-between text-lg font-bold text-white">
                 <span>Tổng cộng:</span>
-                <span>{totalPrice} VNĐ</span>
+                <span>{totalPrice + shippingCost} đ</span>
               </p>
               <p className="flex justify-between text-sm font-medium text-white">
                 <span>Đã áp dụng mã giảm:</span>
                 <span>
                   {discountApplied
-                    ? `${discountedPrice - totalPrice} VNĐ`
+                    ? `${discountedPrice - totalPrice} đ`
                     : "Không có"}
                 </span>
               </p>
               <p className="flex justify-between text-lg font-bold text-white">
                 <span>Giá sau giảm:</span>
-                <span>{finalPrice} VNĐ</span>
+                <span>{finalPrice + shippingCost}đ</span>
               </p>
             </div>
             

@@ -58,7 +58,6 @@ bookRouter.get('/api/products/search/:query?', async (req, res) => {
       let books = [];
       for (let author of authors) {
         const authorBooks = await Book.find({ author: author._id }).populate('author');
-        console.log(author._id)
         books.push(...authorBooks);
       }
       return res.json(books);

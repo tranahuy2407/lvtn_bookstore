@@ -1,20 +1,21 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../authencation/UserContext';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { ConfirmDialog } from 'primereact/confirmdialog'; 
+import { confirmDialog } from 'primereact/confirmdialog'; 
+
 const OrderMe = () => {
   const { user } = useContext(UserContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const fetchOrders = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/orders/me/${user._id}`);
         setOrders(response.data);
         setLoading(false);
-   
       } catch (error) {
         console.error('Error fetching orders:', error);
         setLoading(false);
@@ -23,6 +24,20 @@ const OrderMe = () => {
 
     fetchOrders();
   }, [user._id]);
+
+  const handleDeleteOrder = async (orderId) => {
+    const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?');
+    if (!confirmDelete) {
+      return; 
+    }
+
+    try {
+      await axios.delete(`http://localhost:5000/delete/order/${orderId}`);
+      setOrders(orders.filter(order => order._id !== orderId));
+    } catch (error) {
+      console.error('Error deleting order:', error);
+    }
+  };
 
   if (loading) {
     return <div className="text-center py-5">Loading...</div>;
@@ -59,12 +74,34 @@ const OrderMe = () => {
                   <span className="font-bold">Tổng cộng:</span>
                   <span>{order.totalPrice.toLocaleString()} VNĐ</span>
                 </li>
+                <li className="py-2 flex items-center justify-center">
+                  {order.status === -1 && (
+                    <span className="text-red-500 text-center font-semibold">Đơn hàng đã bị hủy</span>
+                  )}
+                </li>
                 <li className="py-2 flex items-center justify-end">
-                  <Link to={`/account/myorders/${order._id}`}
-                    className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                  >
-                    Theo dõi đơn hàng
-                  </Link>
+                  {order.status === -1 ? (
+                    <>
+                      <button
+                        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mr-2"
+                        // onClick={() => handleResetOrder(order._id)}
+                      >
+                        Đặt lại đơn
+                      </button>
+                      <button
+                        onClick={() => handleDeleteOrder(order._id)}
+                        className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                      >
+                        Xóa đơn
+                      </button>
+                    </>
+                  ) : (
+                    <Link to={`/account/myorders/${order._id}`}
+                      className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                    >
+                      Theo dõi đơn hàng
+                    </Link>
+                  )}
                 </li>
               </ul>
             </div>
