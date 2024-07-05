@@ -16,7 +16,7 @@ const Orders = () => {
   // lấy đơn hàng
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/orders");
+      const response = await axios.get("http://localhost:5000/api/all-orders");
       const ordersWithUserName = await Promise.all(
         response.data.map(async (order) => {
           const userName = await fetchUserName(order.userId);
@@ -124,9 +124,9 @@ const Orders = () => {
 
   const columns = [
     {
-      key: "id",
+      key: "orderCode",
       title: "Mã đơn hàng",
-      dataIndex: "_id",
+      dataIndex: "orderCode",
     },
     {
       key: "orderedAt",

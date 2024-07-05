@@ -1,23 +1,26 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom';
-import { CartContext } from './CartContext';
 import axios from 'axios';
+import { CartContext } from './CartContext';
+import BookCard from '../components/BookCard';
 
 const SingleBook = () => {
   const { addToCart } = useContext(CartContext);
   const { _id, name, images, price, promotion_price, description, promotion_percent, author } = useLoaderData();
   const [authorName, setAuthorName] = useState("");
   const [categoriesData, setCategoriesData] = useState([]);
-  const navigate = useNavigate(); 
+  const [relatedBooks, setRelatedBooks] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const authorResponse = await axios.get(`http://localhost:5000/author/${author}`);
         setAuthorName(authorResponse.data.name || 'Unknown Author');
-
         const categoriesResponse = await axios.get(`http://localhost:5000/api/product-categories/${_id}`);
         setCategoriesData(categoriesResponse.data);
+        const relatedResponse = await axios.get(`http://localhost:5000/api/related-books/${_id}`);
+        setRelatedBooks(relatedResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -34,7 +37,7 @@ const SingleBook = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-24">
       <h1 className="text-3xl font-bold text-center my-8">Chi tiết sản phẩm</h1>
       
       <div className="flex flex-col lg:flex-row">
@@ -79,7 +82,6 @@ const SingleBook = () => {
               <p><span className="font-semibold">Tác giả:</span> {authorName}</p>
               <p><span className="font-semibold">Thể loại: </span> 
                 {categoriesData && categoriesData.map((category, index) => (
-                
                   <span key={category._id}>
                     {index > 0 && ', '}
                     {category.name}
@@ -114,6 +116,10 @@ const SingleBook = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-16">
+        <BookCard headline="Sản phẩm liên quan" books={relatedBooks} />
       </div>
     </div>
   );

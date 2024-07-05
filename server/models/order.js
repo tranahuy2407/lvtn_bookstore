@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const { booksSchema } = require("./book");
-const { defaults } = require("autoprefixer");
 
 const orderSchema = mongoose.Schema({
   books: [
@@ -24,7 +23,7 @@ const orderSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 
     required: true },
-    orderedAt: {
+  orderedAt: {
     type: Number,
     required: true,
   },
@@ -52,13 +51,48 @@ const orderSchema = mongoose.Schema({
     type: String,
     default: "",
   },
+  orderCode: {
+    type: String,
+    required: false,
+    unique: true,
+  },
+  statusHistory: [
+    {
+      status: {
+        type: Number,
+        required: true,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 });
 
-orderSchema.pre('save', function(next) {
+
+orderSchema.pre('save', async function(next) {
   this.updatedAt = new Date();
+  if (this.isNew) {
+    try {
+      const lastOrder = await mongoose.model('Order').findOne().sort({ _id: -1 });
+      
+      let newCode = '#DH0001'; 
+
+      if (lastOrder && lastOrder.orderCode) {
+        const lastCode = lastOrder.orderCode;
+        const lastNumber = parseInt(lastCode.substring(3), 10);
+        newCode = `#DH${String(lastNumber + 1).padStart(4, '0')}`; 
+      }
+
+      this.orderCode = newCode;
+    } catch (error) {
+      return next(error); 
+    }
+  }
+
   next();
 });
 
 const Order = mongoose.model("Order", orderSchema);
 module.exports = Order;
-

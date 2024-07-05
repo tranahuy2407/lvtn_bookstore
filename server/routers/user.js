@@ -3,7 +3,7 @@ const userRouter = express.Router();
 const auth = require("../middlewares/auth");
 const Order = require("../models/order");
 const Promotion = require("../models/promotion");
-const { Book } = require("../models/book");
+
 const User = require("../models/user");
 
 //Nhập giảm giá
@@ -42,87 +42,6 @@ userRouter.post('/apply-promotion', async (req, res) => {
   }
 });
 
-userRouter.post('/api/order', async (req, res) => {
-  try {
-    const { cart, totalPrice, address, paymentMethod, discountCode, discountedPrice, phone, userId, gift } = req.body;
-    let products = [];
-
-    for (let item of cart) {
-      if (!item.book || !item.book._id) {
-        return res.status(400).json({ msg: 'Dữ liệu sản phẩm không hợp lệ.' });
-      }
-
-      let product = await Book.findById(item.book._id);
-      if (!product) {
-        return res.status(404).json({ msg: 'Sản phẩm không tồn tại.' });
-      }
-
-      if (product.quantity >= item.quantity) {
-        product.quantity -= item.quantity;
-        products.push({ product, quantity: item.quantity });
-        await product.save();
-      } else {
-        return res.status(400).json({ msg: `${product.name} tạm hết hàng!` });
-      }
-    }
-
-    if (discountCode) {
-      const promotion = await Promotion.findOne({ code: discountCode });
-      if (promotion) {
-        promotion.usage_per_user.push(userId);
-        promotion.limit -= 1;
-        await promotion.save();
-      }
-    }
-
-    const orderGift = gift || "Không có quà tặng";
-
-    const orderBooks = cart.map(item => ({
-      book: {
-        ...item.book,
-        promotion_percent: item.book.promotion_percent !== undefined ? item.book.promotion_percent : 0
-      },
-      quantity: item.quantity
-    }));
-
-    const order = new Order({
-      books: orderBooks,
-      totalPrice: discountedPrice || totalPrice,
-      address,
-      userId: userId,
-      orderedAt: new Date().getTime(),
-      paymentMethod,
-      phone,
-      gift: orderGift,
-    });
-    
-    await order.save();
-
-    res.status(201).json(order);
-  } catch (e) {
-    console.error('Order creation error:', e);
-    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình đặt hàng.' });
-  }
-});
-
-
-userRouter.get('/api/orders/me/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId; 
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    const orders = await Order.find({ userId });
-    res.json(orders);
-  } catch (e) {
-    console.error('Error fetching orders:', e);
-    res.status(500).json({
-      error: 'Đã xảy ra lỗi trong quá trình lấy danh sách đơn hàng.',
-    });
-  }
-});
 
 //lấy tên theo id
 userRouter.get("/api/getusername/:userId", async (req, res) => {

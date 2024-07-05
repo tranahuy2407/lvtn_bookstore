@@ -3,6 +3,7 @@ import Banner from '../components/Banner'
 import BestSellerBooks from '../home/BestSellerBooks'
 import PromotionBook from './PromotionBook'
 import Category from './Category'
+import Service from './Service'
 const Home = () => {
   return (
     <div> 
@@ -10,6 +11,7 @@ const Home = () => {
       <Category />
       <PromotionBook/>
       <BestSellerBooks/>
+      <Service/>
     </div>
   )
 }

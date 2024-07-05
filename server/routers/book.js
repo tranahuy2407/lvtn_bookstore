@@ -4,7 +4,7 @@ const auth = require("../middlewares/auth");
 const { Book } = require("../models/book");
 const Category = require('../models/category');
 const  Author = require('../models/author'); 
-const { ObjectId } = require('mongoose').Types; 
+const mongoose = require('mongoose');
 
 // Endpoint lấy tất cả
 bookRouter.get("/api/products", async (req, res) => {
@@ -33,35 +33,38 @@ bookRouter.get("/api/products/:id", async (req, res) => {
   }
 });
 
-
 // Endpoint tìm kiếm sách
 bookRouter.get('/api/products/search/:query?', async (req, res) => {
   try {
-    let query = req.params.query?.trim();
-  
+    let query = decodeURIComponent(req.params.query?.trim());
+
+    // Nếu không có query hoặc query là 'undefined', trả về tất cả các sách
     if (!query || query === 'undefined') {
       const books = await Book.find().populate('author');
       return res.json(books);
     }
 
-    if (ObjectId.isValid(query)) {
-      const author = await Author.findById(query);
-      if (!author) {
-        return res.status(404).json({ error: 'Author not found' });
+    let authorId;
+
+    // Chuyển đổi query thành ObjectID nếu là một chuỗi hợp lệ
+    try {
+      authorId = mongoose.Types.ObjectId(query);
+    } catch (error) {
+      // Nếu không phải là ObjectID hợp lệ, tìm tác giả theo tên
+      const author = await Author.findOne({ name: { $regex: query, $options: "i" } });
+      if (author) {
+        authorId = author._id;
+      } else {
+        console.log(`Không tìm thấy tác giả với tên: ${query}`);
       }
-      const booksByAuthor = await Book.find({ author: author._id }).populate('author');
+    }
+
+    if (authorId) {
+      const booksByAuthor = await Book.find({ author: authorId }).populate('author');
       return res.json(booksByAuthor);
     }
-    const authors = await Author.find({ name: { $regex: query, $options: "i" } });
 
-    if (authors.length > 0) {
-      let books = [];
-      for (let author of authors) {
-        const authorBooks = await Book.find({ author: author._id }).populate('author');
-        books.push(...authorBooks);
-      }
-      return res.json(books);
-    }
+    // Tìm kiếm theo tên sách nếu không tìm thấy tác giả khớp
     const nameMatchBooks = await Book.find({ name: { $regex: query, $options: "i" } }).populate('author');
     return res.json(nameMatchBooks);
 
@@ -71,32 +74,7 @@ bookRouter.get('/api/products/search/:query?', async (req, res) => {
   }
 });
 
-
-//Khuyến mãi hôm nay 
-bookRouter.get("/api/deal-of-day", auth, async (req, res) => {
-  try {
-    let products = await Book.find({});
-
-    products = products.sort((a, b) => {
-      let aSum = 0;
-      let bSum = 0;
-
-      for (let i = 0; i < a.ratings.length; i++) {
-        aSum += a.ratings[i].rating;
-      }
-
-      for (let i = 0; i < b.ratings.length; i++) {
-        bSum += b.ratings[i].rating;
-      }
-      return aSum < bSum ? 1 : -1;
-    });
-
-    res.json(products[0]);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
+//Lấy danh mục sản phẩm của sản phẩm thông qua id sản phẩm đó
 bookRouter.get("/api/product-categories/:productId", async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -116,7 +94,7 @@ bookRouter.get("/api/product-categories/:productId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
+// Endpoint lấy danh mục từ id
 bookRouter.get('/api/books-by-category/:categoryId', async (req, res) => {
   try {
     const categoryId = req.params.categoryId;
@@ -148,4 +126,27 @@ bookRouter.get('/api/best-sellers', async (req, res) => {
   }
 });
 
-module.exports =bookRouter;
+// Endpoint để lấy các sản phẩm liên quan
+bookRouter.get("/api/related-books/:bookId", async (req, res) => {
+  try {
+    const bookId = req.params.bookId;
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ error: "Book not found" });
+    }
+    const categoryIds = book.categories.map(category => new ObjectId(category.$oid || category));
+    const relatedBooks = await Book.find({
+      _id: { $ne: new ObjectId(bookId) }, 
+      categories: { $in: categoryIds }, 
+      author: { $ne: book.author }
+    }).populate('author categories'); 
+
+    res.json(relatedBooks);
+  } catch (error) {
+    console.error("Error fetching related books:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+module.exports = bookRouter;

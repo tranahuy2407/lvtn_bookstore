@@ -39,6 +39,20 @@ const OrderMe = () => {
     }
   };
 
+  const handleResetOrder = async (orderId) => {
+    const confirmReset = window.confirm('Bạn có chắc chắn muốn đặt lại đơn hàng này?');
+    if (!confirmReset) {
+      return;
+    }
+
+    try {
+      const response = await axios.put(`http://localhost:5000/order/${orderId}/reset`);
+      setOrders(orders.map(order => order._id === orderId ? response.data.order : order));
+    } catch (error) {
+      console.error('Error resetting order:', error);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-5">Loading...</div>;
   }
@@ -52,7 +66,7 @@ const OrderMe = () => {
         <div className="grid gap-4">
           {orders.map(order => (
             <div key={order._id} className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold">Mã đơn hàng: #{order._id}</h3>
+              <h3 className="text-lg font-semibold">Mã đơn hàng: {order.orderCode}</h3>
               <ul className="divide-y divide-gray-200">
                 {order.books && order.books.length > 0 ? (
                   order.books.map((item, index) => (
@@ -84,9 +98,9 @@ const OrderMe = () => {
                     <>
                       <button
                         className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mr-2"
-                        // onClick={() => handleResetOrder(order._id)}
+                        onClick={() => handleResetOrder(order._id)}
                       >
-                        Đặt lại đơn
+                        Đặt lại đơn 
                       </button>
                       <button
                         onClick={() => handleDeleteOrder(order._id)}

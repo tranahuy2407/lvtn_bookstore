@@ -160,7 +160,7 @@ const Checkout = () => {
   // Xử lý submit form thanh toán
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (
       (!useDefaultAddress && (
         !fullName ||
@@ -175,8 +175,8 @@ const Checkout = () => {
       setErrorMessage("Vui lòng điền đầy đủ thông tin.");
       return;
     }
-
-    const response = await fetch("http://localhost:5000/api/order", {
+  
+    const response = await fetch("http://localhost:5000/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -206,17 +206,22 @@ const Checkout = () => {
         gift: gift ? gift.gifts : "Không có quà tặng",
       }),
     });
-
+  
     const data = await response.json();
-
+  
     if (response.ok) {
-      clearCart();
-      navigate("/invoice");
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        clearCart();
+      } else {
+        clearCart();
+        navigate("/invoice");
+      }
     } else {
       setErrorMessage(data.msg || "Đã xảy ra lỗi trong quá trình đặt hàng.");
     }
   };
-
+  
   // Chọn sử dụng địa chỉ mặc định
   const handleUseDefaultAddress = () => {
     setUseDefaultAddress(true);

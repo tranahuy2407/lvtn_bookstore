@@ -9,6 +9,7 @@ const CategoryNav = ({ onCategorySelect }) => {
   const [hoveredType, setHoveredType] = useState("");
   const [typeCategories, setTypeCategories] = useState({});
   const [selectedType, setSelectedType] = useState(""); 
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -36,7 +37,7 @@ const CategoryNav = ({ onCategorySelect }) => {
   const handleCategorySelect = (categoryName) => {
     setHoveredCategory(categoryName);
     onCategorySelect(categoryName);
-    setDropdownVisible(false);
+    setDropdownVisible(false); // Đóng dropdown khi chọn danh mục
   };
 
   const handleMouseEnter = (type) => {
@@ -137,10 +138,10 @@ const CategoryNav = ({ onCategorySelect }) => {
             <div className="flex flex-col space-y-4 flex-grow">
               {hoveredType && (
                 <div key={hoveredType} className="flex items-start">
-         
                   <CategoryCard
                     headline={hoveredType}
                     categories={typeCategories[hoveredType] || []} 
+                    onCloseDropdown={() => setDropdownVisible(false)} // Truyền callback để đóng dropdown
                   />
                 </div>
               )}

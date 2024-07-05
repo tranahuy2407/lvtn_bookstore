@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const CategoryCard = ({ headline, categories }) => {
+const CategoryCard = ({ headline, categories, onCloseDropdown }) => { 
   const [expanded, setExpanded] = useState(false);
 
   const categoryGroups = [];
@@ -12,6 +12,10 @@ const CategoryCard = ({ headline, categories }) => {
   const defaultRowCount = 2;
   const maxRowCount = categoryGroups.length;
   let displayRowCount = expanded ? maxRowCount : defaultRowCount;
+
+  const handleCategoryClick = () => {
+    onCloseDropdown(); 
+  };
 
   return (
     <div className="p-4 bg-white border rounded-lg shadow">
@@ -24,6 +28,7 @@ const CategoryCard = ({ headline, categories }) => {
                 <Link
                   to={`/shop/${category._id}`}
                   className="border border-gray-200 hover:border-gray-300 hover:scale-105 transition-transform rounded-lg mb-4 block"
+                  onClick={handleCategoryClick} 
                 >
                   <div className="flex flex-col items-center p-4">
                     <img
