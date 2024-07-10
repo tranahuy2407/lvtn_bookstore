@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Favourites from '../components/Favourites';
 import OrderMe from '../components/OrderMe';
+import OrderHistory from '../components/OrderHistory';
 
 const AccountPage = () => {
   const [redirect, setRedirect] = useState(null);
@@ -180,6 +181,7 @@ const AccountPage = () => {
             <Link className={linkClasses('profile')} to="/account">Hồ sơ của bạn</Link>
             <Link className={linkClasses('favoritebooks')} to="/account/favoritebooks">Sách bạn đã yêu thích</Link>
             <Link className={linkClasses('myorders')} to="/account/myorders">Đơn hàng của bạn</Link>
+            <Link className={linkClasses('orderhistory')} to="/account/orderhistory">Lịch sử đơn hàng</Link>
           </>
         )}
       </nav>
@@ -307,6 +309,9 @@ const AccountPage = () => {
        )}
         {user && subpage === 'myorders' && (
         <OrderMe/>
+       )}
+        {user && subpage === 'orderhistory' && (
+        <OrderHistory/>
        )}
     </div>
   );

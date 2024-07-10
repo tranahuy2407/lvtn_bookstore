@@ -33,6 +33,8 @@ import AddPromotion from "../admin/components/AddPromotion";
 import Authors from "../admin/components/Authors";
 import AddAuthor from "../admin/components/AddAuthor";
 import UpdateAuthor from "../admin/components/UpdateAuthor";
+import OrderHistory from "../components/OrderHistory";
+import OrderSuccess from "../shop/OrderSuccess";
 
 const router = createBrowserRouter([
   {
@@ -95,6 +97,10 @@ const router = createBrowserRouter([
             element: <OrderMe/>
         },
         {
+            path:"/account/:subpage/:action",
+            element: <OrderHistory/>
+        },
+        {
             path: "/account/myorders/:orderId",
             element: <OrderDetail/>,
             loader: ({params})=>fetch(`http://localhost:5000/order/${params.id}`)
@@ -108,8 +114,12 @@ const router = createBrowserRouter([
             element: <Checkout/>
         },
         {
-            path:"/invoice",
+            path:"/invoice/:orderId",
             element: <Invoice/>
+        },
+        {
+            path:"/order-success",
+            element: <OrderSuccess/>
         },
         {
             path:"/search",

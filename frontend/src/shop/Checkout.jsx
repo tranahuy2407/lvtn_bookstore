@@ -19,6 +19,7 @@ const Checkout = () => {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
@@ -43,14 +44,31 @@ const Checkout = () => {
     return address;
   };
 
-  // Lấy thông tin người dùng từ UserContext khi component mount
   useEffect(() => {
     if (user) {
       setUserId(user._id);
       setFullName(user.name);
       setPhone(user.phone);
       setAddress(user.address);
-      setProvinceCost(extractProvince(user.address));
+      setEmail(user.email);
+      const extractedProvince = extractProvince(user.address);
+      setProvinceCost(extractedProvince);
+
+      // Gọi API để lấy phí vận chuyển cho địa chỉ mặc định
+      fetch(`http://localhost:5000/shipping-cost/${extractedProvince}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.cost) {
+            setShippingCost(data.cost);
+          } else {
+            setShippingCost(0);
+            setErrorMessage("Không tìm thấy thông tin vận chuyển cho tỉnh này.");
+          }
+        })
+        .catch((error) => {
+          console.error("Lỗi khi lấy thông tin vận chuyển:", error);
+          setErrorMessage("Đã xảy ra lỗi khi lấy thông tin vận chuyển.");
+        });
     }
   }, [user]);
 
@@ -74,7 +92,6 @@ const Checkout = () => {
         });
     }
   }, [province, useDefaultAddress]);
-
   // Lấy danh sách tỉnh thành khi component mount
   useEffect(() => {
     fetch("https://esgoo.net/api-tinhthanh/1/0.htm")
@@ -200,22 +217,23 @@ const Checkout = () => {
         totalPrice: finalPrice + shippingCost,
         address: useDefaultAddress ? user.address : `${address}, ${ward}, ${district.full_name}, ${province.full_name}`,
         paymentMethod,
+        name: useDefaultAddress ? user.name : fullName,
         discountCode: discountCode ? discountCode.code : null,
         phone,
+        email,
         userId,
         gift: gift ? gift.gifts : "Không có quà tặng",
       }),
     });
   
     const data = await response.json();
-  
     if (response.ok) {
       if (data.paymentUrl) {
         window.location.href = data.paymentUrl;
         clearCart();
       } else {
-        clearCart();
-        navigate("/invoice");
+        navigate("/order-success", { state: { order: data } });
+        clearCart(); 
       }
     } else {
       setErrorMessage(data.msg || "Đã xảy ra lỗi trong quá trình đặt hàng.");
@@ -246,7 +264,6 @@ const Checkout = () => {
               onSubmit={handleSubmit}
               className="mt-10 flex flex-col space-y-4"
             >
-              {/* Thêm radiobuttons vào đây */}
               <div className="space-y-2">
                 <label className="inline-flex items-center">
                   <input

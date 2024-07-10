@@ -2,8 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../authencation/UserContext';
 import { Link } from 'react-router-dom';
-import { ConfirmDialog } from 'primereact/confirmdialog'; 
-import { confirmDialog } from 'primereact/confirmdialog'; 
+
 
 const OrderMe = () => {
   const { user } = useContext(UserContext);

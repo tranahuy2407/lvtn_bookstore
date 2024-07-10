@@ -22,10 +22,15 @@ const orderSchema = mongoose.Schema({
   userId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 
-    required: true },
-  orderedAt: {
-    type: Number,
+    required: true
+  },
+  name: {
+    type: String,
     required: true,
+  },
+  orderedAt: {
+    type: Date,  
+    default: Date.now,
   },
   status: {
     type: Number,
@@ -70,13 +75,12 @@ const orderSchema = mongoose.Schema({
   ],
 });
 
-
+// Middleware để tự động tạo mã đơn hàng
 orderSchema.pre('save', async function(next) {
   this.updatedAt = new Date();
   if (this.isNew) {
     try {
       const lastOrder = await mongoose.model('Order').findOne().sort({ _id: -1 });
-      
       let newCode = '#DH0001'; 
 
       if (lastOrder && lastOrder.orderCode) {
@@ -89,6 +93,30 @@ orderSchema.pre('save', async function(next) {
     } catch (error) {
       return next(error); 
     }
+  }
+
+  next();
+});
+
+orderSchema.pre('save', function(next) {
+  if (this.isNew) {
+    this.statusHistory = [{
+      status: this.status,
+      updatedAt: this.updatedAt
+    }];
+  }
+  next();
+});
+
+// Middleware để thêm vào lịch sử trạng thái trước khi update
+orderSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate();
+  if (update.status !== undefined) {
+    if (!update.$push) {
+      update.$push = {};
+    }
+    update.$push.statusHistory = { status: update.status, updatedAt: new Date() };
+    update.updatedAt = new Date();
   }
 
   next();

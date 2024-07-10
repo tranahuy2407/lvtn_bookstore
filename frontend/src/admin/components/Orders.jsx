@@ -160,12 +160,12 @@ const Orders = () => {
       dataIndex: "status",
       render: (status) => (
         <Tag color={status === 3 ? "green" : "blue"}>
-          {status === 0
-            ? "Chưa giải quyết"
-            : status === 1
-            ? "Đã nhận"
-            : status === 2
-            ? "Đang giao hàng"
+          { status === -1 ? "Đã hủy"
+            : status === 0 ? "Chưa giải quyết"
+            : status === 1 ? "Đã nhận"
+            : status === 2 ? "Đang giao hàng"
+             : status === 4 ? "Đã giao đến tay khách hàng"
+              : status === 5 ? "Đang tiến hành thanh toán"
             : "Đã giao"}
         </Tag>
       ),

@@ -6,7 +6,7 @@ import BookCard from '../components/BookCard';
 
 const SingleBook = () => {
   const { addToCart } = useContext(CartContext);
-  const { _id, name, images, price, promotion_price, description, promotion_percent, author } = useLoaderData();
+  const { _id, name, images, price, promotion_price, description, promotion_percent, author,quantity } = useLoaderData();
   const [authorName, setAuthorName] = useState("");
   const [categoriesData, setCategoriesData] = useState([]);
   const [relatedBooks, setRelatedBooks] = useState([]);
@@ -93,7 +93,7 @@ const SingleBook = () => {
             <button
               type="button"
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              onClick={() => addToCart({ _id, name, price, promotion_price, images })}
+              onClick={() => addToCart({ _id, name, price, promotion_price, images, quantity })}
             >
               Thêm vào giỏ hàng
             </button>

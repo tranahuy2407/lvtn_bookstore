@@ -5,6 +5,7 @@ const { Book } = require("../models/book");
 const Category = require('../models/category');
 const  Author = require('../models/author'); 
 const mongoose = require('mongoose');
+const { ObjectId } = require('mongoose').Types;
 
 // Endpoint lấy tất cả
 bookRouter.get("/api/products", async (req, res) => {
@@ -126,6 +127,7 @@ bookRouter.get('/api/best-sellers', async (req, res) => {
   }
 });
 
+
 // Endpoint để lấy các sản phẩm liên quan
 bookRouter.get("/api/related-books/:bookId", async (req, res) => {
   try {
@@ -147,6 +149,5 @@ bookRouter.get("/api/related-books/:bookId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 module.exports = bookRouter;
