@@ -56,6 +56,10 @@ const orderSchema = mongoose.Schema({
     type: String,
     default: "",
   },
+  note: {
+    type: String,
+    default: "",
+  },
   orderCode: {
     type: String,
     required: false,

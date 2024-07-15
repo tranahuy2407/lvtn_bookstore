@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
-import { useLocation } from "react-router-dom";
-import axios from 'axios'; 
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from "react-router-dom";
 
 const OrderSuccess = () => {
-
   const location = useLocation();
+  const navigate = useNavigate();
   const { order } = location.state || {};
   const [loading, setLoading] = useState(false);
 
@@ -12,18 +11,14 @@ const OrderSuccess = () => {
     return <div className="bg-gray-100 h-screen">Đơn hàng không tồn tại!</div>;
   }
 
-  const handleCreateInvoice = async () => {
-    try {
-      setLoading(true); 
-      const response = await axios.post('http://localhost:5000/add-invoices', order); 
-
-      setLoading(false); 
-      console.log('Tạo hóa đơn thành công:', response.data);
-    } catch (error) {
-      setLoading(false);
-      console.error('Lỗi khi tạo hóa đơn:', error);
-    }
+  const handleContinueShopping = () => {
+    navigate('/all-shop');
   };
+
+  const handleTrackOrder = () => {
+    navigate(`/account/myorders/${order._id}`);
+  };
+
   return (
     <div className="bg-gray-100 h-screen">
       <div className="bg-white p-6 md:mx-auto py-24">
@@ -39,11 +34,17 @@ const OrderSuccess = () => {
           <p> Chúc bạn có một ngày tốt lành! </p>
           <div className="py-10 text-center">
             <button
-              onClick={handleCreateInvoice}
-              className={`px-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handleTrackOrder}
+              className={`px-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 mx-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={loading}
             >
-              {loading ? 'Đang tạo hóa đơn...' : 'Tạo hóa đơn'}
+              Theo dõi đơn hàng 
+            </button>
+            <button
+              onClick={handleContinueShopping}
+              className="px-12 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 mx-2"
+            >
+              Tiếp tục mua sách
             </button>
           </div>
         </div>
@@ -52,4 +53,4 @@ const OrderSuccess = () => {
   );
 };
 
-export default OrderSuccess
+export default OrderSuccess;

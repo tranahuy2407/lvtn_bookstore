@@ -203,7 +203,7 @@ orderRouter.post("/api/update-order-status", async (req, res) => {
 //Đặt hàng
 orderRouter.post('/api/orders', async (req, res) => {
   try {
-    const { cart, totalPrice, address, paymentMethod, name, discountCode, discountedPrice, phone, userId, gift, email } = req.body;
+    const { cart, totalPrice, address, paymentMethod, name, discountCode, discountedPrice, phone, userId, gift, email, note } = req.body;
     let products = [];
 
     for (let item of cart) {
@@ -256,6 +256,7 @@ orderRouter.post('/api/orders', async (req, res) => {
       paymentMethod,
       name,
       phone,
+      note,
       gift: orderGift,
     };
 
@@ -280,7 +281,7 @@ orderRouter.post('/api/orders', async (req, res) => {
         amount: discountedPrice || totalPrice,
         description: `Thanh toán đơn hàng tại HS BookStore`,
         bank_code: "",
-        callback_url: "https://daa5-27-74-241-88.ngrok-free.app/callback", 
+        callback_url: "https://1eb3-14-161-48-112.ngrok-free.app/callback", 
       };
 
       const data = config.app_id + "|" + zaloPayOrder.app_trans_id + "|" + zaloPayOrder.app_user + "|" + zaloPayOrder.amount + "|" + zaloPayOrder.app_time + "|" + zaloPayOrder.embed_data + "|" + zaloPayOrder.item;
@@ -359,8 +360,6 @@ orderRouter.post('/callback', async (req, res) => {
   try {
     let dataStr = req.body.data;
     let reqMac = req.body.mac;
-
-    console.log(req.body.data)
     let mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
     console.log("mac =", mac);
 

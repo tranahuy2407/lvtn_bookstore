@@ -34,6 +34,7 @@ const Checkout = () => {
   const [useDefaultAddress, setUseDefaultAddress] = useState(true);
   const [shippingCost, setShippingCost] = useState(0);
   const [provinceCost, setProvinceCost] = useState("");
+  const [note, setNote] = useState("");
 
   // Hàm để tách tỉnh từ địa chỉ
   const extractProvince = (address) => {
@@ -193,53 +194,87 @@ const Checkout = () => {
       return;
     }
   
-    const response = await fetch("http://localhost:5000/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
-        cart: cartItems.map((item) => ({
-          book: {
-            _id: item._id,
-            name: item.name,
-            quantity: item.quantity,
-            description: item.description,
-            images: item.images,
-            price: item.price,
-            promotion_price: item.promotion_price,
-            categories: item.categories,
-            promotion_percent: item.promotion_percent || 0,
-          },
-          quantity: item.cartQuantity,
-        })),
-        totalPrice: finalPrice + shippingCost,
-        address: useDefaultAddress ? user.address : `${address}, ${ward}, ${district.full_name}, ${province.full_name}`,
-        paymentMethod,
-        name: useDefaultAddress ? user.name : fullName,
-        discountCode: discountCode ? discountCode.code : null,
-        phone,
-        email,
-        userId,
-        gift: gift ? gift.gifts : "Không có quà tặng",
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          cart: cartItems.map((item) => ({
+            book: {
+              _id: item._id,
+              name: item.name,
+              quantity: item.quantity,
+              description: item.description,
+              images: item.images,
+              price: item.price,
+              promotion_price: item.promotion_price,
+              categories: item.categories,
+              promotion_percent: item.promotion_percent || 0,
+            },
+            quantity: item.cartQuantity,
+          })),
+          totalPrice: finalPrice + shippingCost,
+          address: useDefaultAddress ? user.address : `${address}, ${ward}, ${district.full_name}, ${province.full_name}`,
+          paymentMethod,
+          name: useDefaultAddress ? user.name : fullName,
+          discountCode: discountCode ? discountCode.code : null,
+          phone,
+          email,
+          userId,
+          gift: gift ? gift.gifts : "Không có quà tặng",
+          note 
+        }),
+      });
   
-    const data = await response.json();
-    if (response.ok) {
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
-        clearCart();
+      const data = await response.json();
+      if (response.ok) {
+        console.log('Order created:', data);
+        if (data.paymentUrl) {
+          const paymentResponse = await fetch("http://localhost:5000/invoices", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              orderId: data._id,
+              note: note, 
+            }),
+          });
+
+          const invoiceData = await paymentResponse.json();
+          console.log('Invoice created:', invoiceData);
+
+          window.location.href = data.paymentUrl;
+          clearCart();
+        } else {
+          const paymentResponse = await fetch("http://localhost:5000/invoices", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              orderId: data._id,
+              note,
+            }),
+          });
+
+          const invoiceData = await paymentResponse.json();
+          console.log('Invoice created:', invoiceData);
+          navigate("/order-success", { state: { order: data } });
+          clearCart();
+        }
       } else {
-        navigate("/order-success", { state: { order: data } });
-        clearCart(); 
+        setErrorMessage(data.msg || "Đã xảy ra lỗi trong quá trình đặt hàng.");
       }
-    } else {
-      setErrorMessage(data.msg || "Đã xảy ra lỗi trong quá trình đặt hàng.");
+    } catch (error) {
+      console.error("Đã xảy ra lỗi:", error);
+      setErrorMessage("Đã xảy ra lỗi trong quá trình đặt hàng.");
     }
   };
-  
+
   // Chọn sử dụng địa chỉ mặc định
   const handleUseDefaultAddress = () => {
     setUseDefaultAddress(true);
@@ -417,6 +452,22 @@ const Checkout = () => {
               </div>
             </div>
           )}
+            {/* Thêm trường ghi chú */}
+            <div className="col-span-3">
+                <label
+                  htmlFor="note"
+                  className="text-xs font-semibold text-gray-500"
+                >
+                  Ghi chú ( nếu có )
+                </label>
+                <textarea
+                  id="note"
+                  name="note"
+                  onChange={(e) => setNote(e.target.value)}
+                  className="mt-1 block w-full rounded border-gray-300 bg-gray-50 py-3 px-4 text-sm placeholder-gray-300 shadow-sm outline-none transition focus:ring-2 focus:ring-teal-500"
+                  rows="3"
+                />
+              </div>
               <PaymentMethods
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}

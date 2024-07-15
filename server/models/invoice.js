@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
-const { ordersSchema } = require("./order");
+
 let Invoice;
 try {
-    Invoice = mongoose.model("ShippingCost");
+    Invoice = mongoose.model("Invoice");
 } catch (error) {
     const invoicesSchema = new mongoose.Schema({
         invoiceCode: {
             type: String, 
-            required: true,
+            required: false,
         },
         createdAt: {
             type: Date,
@@ -21,7 +21,10 @@ try {
             type: String, 
             default: "",
         },
-        orders:[ordersSchema],
+        order: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Order'
+        },
     });
 
     // Middleware to auto-generate the invoice code
@@ -45,7 +48,7 @@ try {
     next();
   });
 
-    Invoice = mongoose.model(" Invoice", invoicesSchema);
+    Invoice = mongoose.model("Invoice", invoicesSchema);
 }
 
 

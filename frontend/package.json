@@ -26,6 +26,7 @@
     "match-sorter": "^6.3.4",
     "primeicons": "^7.0.0",
     "primereact": "^10.6.6",
+    "puppeteer": "^22.13.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.2.1",

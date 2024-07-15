@@ -95,11 +95,11 @@ const OrderHistory = () => {
                             />
                             <div>
                               <div className="font-medium text-gray-900">{product.book.name}</div>
-                              <div className="mt-1 sm:hidden">{product.book.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</div>
+                              <div className="mt-1 sm:hidden">{product.book.promotion_price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="hidden py-6 pr-8 sm:table-cell">{product.book.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</td>
+                        <td className="hidden py-6 pr-8 sm:table-cell">{product.book.promotion_price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</td>
                         <td className="hidden py-6 pr-8 sm:table-cell">{product.quantity}</td>
                         <td className="hidden py-6 pr-8 sm:table-cell">{new Date(order.orderedAt).toLocaleDateString()}</td>
                         <td className="whitespace-nowrap py-6 text-right font-medium">

@@ -3,7 +3,6 @@ import axios from 'axios';
 import { UserContext } from '../authencation/UserContext';
 import { Link } from 'react-router-dom';
 
-
 const OrderMe = () => {
   const { user } = useContext(UserContext);
   const [orders, setOrders] = useState([]);
@@ -109,11 +108,18 @@ const OrderMe = () => {
                       </button>
                     </>
                   ) : (
-                    <Link to={`/account/myorders/${order._id}`}
-                      className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                    >
-                      Theo dõi đơn hàng
-                    </Link>
+                    <>
+                      <Link to={`/account/myorders/${order._id}`}
+                        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mr-2"
+                      >
+                        Theo dõi đơn hàng
+                      </Link>
+                      <Link to={`/invoice/${order._id}`}
+                        className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                      >
+                        Xem hóa đơn
+                      </Link>
+                    </>
                   )}
                 </li>
               </ul>
