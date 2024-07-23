@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Modal } from 'antd';
 
 function Authors() {
   const [authors, setAuthors] = useState([]);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [authorsPerPage] = useState(5); // Số lượng trong 1 page
+  const [authorsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAuthors = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/authors');
         setAuthors(response.data);
-        // Calculate total pages based on total authors and authorsPerPage
         setTotalPages(Math.ceil(response.data.length / authorsPerPage));
       } catch (error) {
         setError('Error fetching authors');
@@ -23,61 +25,66 @@ function Authors() {
     };
 
     fetchAuthors();
-  }, [authorsPerPage]); // Depend on authorsPerPage to recalculate total pages when it changes
+  }, [authorsPerPage]);
 
-  // Function to get current authors based on currentPage
   const getCurrentAuthors = () => {
     const indexOfLastAuthor = currentPage * authorsPerPage;
     const indexOfFirstAuthor = indexOfLastAuthor - authorsPerPage;
     return authors.slice(indexOfFirstAuthor, indexOfLastAuthor);
   };
 
-  // Chuyển đổi sang trang trước đó
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
 
-  // Chuyển đổi sang trang kế tiếp
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  // Xử lý sự kiện khi nhấn nút xoá
-  const handleDeleteAuthor = async (id) => {
-    try {
-      const response = await axios.delete(`http://localhost:5000/api/authors/${id}`);
-      if (response.status === 200) {
-        // Xoá thành công, cập nhật lại danh sách tác giả
-        const updatedAuthors = authors.filter(author => author._id !== id);
-        setAuthors(updatedAuthors);
-        // Cập nhật lại số trang nếu cần thiết
-        setTotalPages(Math.ceil(updatedAuthors.length / authorsPerPage));
-      } else {
-        setError('Error deleting author');
-      }
-    } catch (error) {
-      setError('Error deleting author');
-      console.error('Error deleting author:', error);
-    }
+  const handleDeleteAuthor = (id) => {
+    Modal.confirm({
+      title: 'Bạn có chắc chắn muốn xóa tác giả này không?',
+      content: 'Hành động này không thể hoàn tác.',
+      okText: 'Có',
+      cancelText: 'Không',
+      onOk: async () => {
+        try {
+          const response = await axios.delete(`http://localhost:5000/api/authors/${id}`);
+          if (response.status === 200) {
+            const updatedAuthors = authors.filter(author => author._id !== id);
+            setAuthors(updatedAuthors);
+            setTotalPages(Math.ceil(updatedAuthors.length / authorsPerPage));
+          } else {
+            setError('Error deleting author');
+          }
+        } catch (error) {
+          setError('Error deleting author');
+          console.error('Error deleting author:', error);
+        }
+      },
+    });
   };
 
   return (
     <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
       <strong className='text-gray-700 font-medium'>Danh sách tác giả</strong>
       <div className="mt-4 flex justify-start">
-        <Link to="/admin/dashboard/addauthors" className='bg-green-500 text-white px-4 py-2 rounded' style={{ textDecoration: 'none' }}>
+        <button
+          onClick={() => navigate('/admin/dashboard/addauthors')}
+          className='bg-green-500 text-white px-4 py-2 rounded'
+        >
           Thêm tác giả
-        </Link>
+        </button>
       </div>
       <div className='mt-3'>
         <table className='w-full text-gray-700'>
           <thead>
             <tr>
-              <th className='border border-gray-300'>ID</th>
+              <th className='border border-gray-300'>STT</th>
               <th className='border border-gray-300'>Tên tác giả</th>
               <th className='border border-gray-300'>Mô tả</th>
               <th className='border border-gray-300'>Hình ảnh</th>
@@ -85,31 +92,32 @@ function Authors() {
             </tr>
           </thead>
           <tbody>
-            {getCurrentAuthors().map(author => (
+            {getCurrentAuthors().map((author, index) => (
               <tr key={author._id}>
-                <td className='border border-gray-300'>{author._id}</td>
-                <td className='border border-gray-300'>{author.name}</td>
-                <td className='border border-gray-300'>{author.description}</td>
-                <td className='border border-gray-300'><img src={author.image} alt={author.name} style={{ width: '100px', height: 'auto' }} /></td>
-                <td className='border border-gray-300'>
+                <td className='border border-gray-300 text-center'>{(currentPage - 1) * authorsPerPage + index + 1}</td>
+                <td className='border border-gray-300 text-center'>{author.name}</td>
+                <td className='border border-gray-300 text-center'>{author.description}</td>
+                <td className='border border-gray-300 text-center'>
+                  <img src={author.image} alt={author.name} className='h-16 w-16 object-contain mx-auto' />
+                </td>
+                <td className='border border-gray-300 text-center'>
                   <Link
                     to={`/admin/dashboard/updateauthor/${author._id}`}
                     className='text-blue-500 mr-2'
                   >
-                    Sửa
+                    <EditOutlined />
                   </Link>
                   <button
                     onClick={() => handleDeleteAuthor(author._id)}
                     className='text-red-500'
                   >
-                    Xóa
+                    <DeleteOutlined />
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {/* Phân trang */}
         <div className="mt-3 flex justify-between items-center">
           <button
             onClick={handlePreviousPage}

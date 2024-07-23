@@ -9,7 +9,7 @@ const linkClasses = 'flex items-center gap-2 font-light px-3 py-2 hover:bg-neutr
 
 export default function Sidebar() {
   return (
-    <div className="bg-neutral-900 w-60 p-3 flex flex-col text-white">
+    <div className="bg-neutral-900 max-h-screen w-60 p-3 flex flex-col text-white overflow-y-auto">
       <div className="flex items-center gap-2 px-1 py-3">
         <FcReading fontSize={24} />
         <span className="text-neutral-100 text-lg">HS BookStore</span>

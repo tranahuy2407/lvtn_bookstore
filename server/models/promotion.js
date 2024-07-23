@@ -14,11 +14,15 @@ try {
             type: String, 
             required: true
         },
+        status: {
+            type: Number, 
+            required: true
+        },
         type: {
             type: String,
             required: true
         },
-        
+            
         code: {
             type: String,
             required: true,

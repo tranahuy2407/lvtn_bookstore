@@ -132,44 +132,74 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 			},
 		]
 	},
-	
-	// 		{
-	// 			key: 'messages',
-	// 			label: 'Bình luận',
-	// 			path: '/messages',
-	// 			icon: <HiOutlineAnnotation />
-	// 		}
-
-	// {
-	// 	key: 'customers',
-	// 	label: 'Customers',
-	// 	path: '/customers',
-	// 	icon: <HiOutlineUsers />
-	// },
-	
-	// {
-	// 	key: 'updatepublishers',
-	// 	label: 'Sửa nhà xuất bản',
-	// 	path: '/admin/dashboard/updatepublishers/:id',
-	// 	icon: <HiOutlineDocumentText />
-	// },
-
-	
-
-	
+	{
+		key: 'managecomment',
+		label: 'Quản lý bình luận',
+		icon: <HiOutlineCube />,
+		children: [
+			
+			{
+				key: 'comments',
+				label: 'Danh sách bình luận',
+				path: '/admin/dashboard/comments',
+				icon: <HiOutlineDocumentText />
+			},
+		]
+	},
+	{
+		key: 'managenew',
+		label: 'Quản lý tin tức',
+		icon: <HiOutlineCube />,
+		children: [
+			
+			{
+				key: 'new',
+				label: 'Danh sách tin tức',
+				path: '/admin/dashboard/news',
+				icon: <HiOutlineDocumentText />
+			},
+			
+		]
+	},
+	{
+		key: 'managebookreceipt',
+		label: 'Quản lý nhập hàng',
+		icon: <HiOutlineCube />,
+		children: [
+			
+			{
+				key: 'bookreceipts',
+				label: 'Nhập hàng',
+				path: '/admin/dashboard/bookreceipts',
+				icon: <HiOutlineDocumentText />
+			},
+			{
+				key: 'categories-bookreceipt',
+				label: 'Quản lý phiếu nhập',
+				path: '/admin/dashboard/categories-bookreceipt',
+				icon: <HiOutlineDocumentText />
+			},
+			{
+				key: 'supplier',
+				label: 'Quản lý nhà cung cấp',
+				path: '/admin/dashboard/suppliers',
+				icon: <HiOutlineDocumentText />
+			},
+		]
+	},
+	{
+		key: 'managenew',
+		label: 'Quản lý đổi trả',
+		icon: <HiOutlineCube />,
+		children: [
+			
+			{
+				key: 'request-return',
+				label: 'Danh sách yêu cầu',
+				path: '/admin/dashboard/request-return',
+				icon: <HiOutlineDocumentText />
+			},
+			
+		]
+	},
 ]
-
-// export const DASHBOARD_SIDEBAR_BOTTOM_LINKS = [
-// 	{
-// 		key: 'settings',
-// 		label: 'Settings',
-// 		path: '/settings',
-// 		icon: <HiOutlineCog />
-// 	},
-// 	{
-// 		key: 'support',
-// 		label: 'Help & Support',
-// 		path: '/support',
-// 		icon: <HiOutlineQuestionMarkCircle />
-// 	}
-// ]

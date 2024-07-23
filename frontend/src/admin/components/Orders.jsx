@@ -186,7 +186,7 @@ const Orders = () => {
             icon={<EyeOutlined />}
             onClick={() => viewOrderDetails(record)}
           >
-            View Details
+            Xem chi tiết
           </Button>
         </Space>
       ),
@@ -207,35 +207,24 @@ const Orders = () => {
     setIsModalOpen(selectedOrder !== null);
   }, [selectedOrder]);
 
-  // useEffect(() => {
-  //   if (orderCount > prevOrderCount) {
-  //     Modal.info({
-  //       title: "Thông báo",
-  //       content: "Có đơn hàng mới được thêm vào!",
-  //     });
-  //   }
-  // }, [orderCount, prevOrderCount]);
+
 
   return (
     <>
       <Space wrap>
-        {/* <Button type="primary" onClick={() => setIsModalOpen(true)}>
-          <UserAddOutlined />
-          Thêm mới đơn
-        </Button> */}
         <span>Tổng số lượng đơn hàng: {orderCount}</span> 
       </Space>
       <Table columns={columns} dataSource={orders} key="orderTable" />
       <Modal
-        title="Change Order Status"
+        title="Thay đổi trạng thái"
         visible={isModalOpen} 
         onCancel={() => setSelectedOrder(null)} 
         onOk={onUpdateOrderStatus}
       >
         {selectedOrder && (
           <Space direction="vertical">
-            <p key="orderId">
-              <strong>Order ID:</strong> {selectedOrder._id}
+            <p key="orderCode">
+              <strong>Mã đơn hàng:</strong> {selectedOrder.orderCode}
             </p>
             <p key="currentStatus">
               <strong>Trạng thái đơn hàng hiện tại:</strong>{" "}

@@ -35,6 +35,17 @@ import AddAuthor from "../admin/components/AddAuthor";
 import UpdateAuthor from "../admin/components/UpdateAuthor";
 import OrderHistory from "../components/OrderHistory";
 import OrderSuccess from "../shop/OrderSuccess";
+import Rating from "../components/Rating";
+import CreateBookReceipt from "../admin/bookreceipt/CreateBookReceipt";
+import Suppliers from "../admin/bookreceipt/Suppliers";
+import Comments from "../admin/comments/Comments";
+import AddSupplier from "../admin/bookreceipt/AddSuppliers";
+import UpdateSupplier from "../admin/bookreceipt/UpdateSuppliers";
+import CategoryBookReceipt from "../admin/bookreceipt/CategoryBookReceipt";
+import AdminNews from "../admin/news/AdminNews";
+import AddNews from "../admin/news/AddNews";
+import UpdateNews from "../admin/news/UpdateNews";
+import Request from "../admin/customer-service/Request";
 
 const router = createBrowserRouter([
   {
@@ -125,6 +136,10 @@ const router = createBrowserRouter([
             path:"/search",
             element: <Search/>
         },
+        {
+            path:"/ratings/:orderId",
+            element: <Rating/>
+        },
       
     ]
   },
@@ -173,7 +188,7 @@ const router = createBrowserRouter([
         },
         {
             path:"/admin/dashboard/orders",
-            element: <Order />
+            element: <Order/>
         },
         {
             path:"/admin/dashboard/promotions",
@@ -185,7 +200,7 @@ const router = createBrowserRouter([
         },
         {
             path:"/admin/dashboard/authors",
-            element: <Authors />
+            element: <Authors/>
         },
         {
             path:"/admin/dashboard/addauthors",
@@ -195,6 +210,46 @@ const router = createBrowserRouter([
             path: "/admin/dashboard/updateauthor/:authorId",
             element: <UpdateAuthor /> 
         },
+        {
+            path:"/admin/dashboard/bookreceipts",
+            element: <CreateBookReceipt />
+        },
+        {
+            path:"/admin/dashboard/suppliers",
+            element: <Suppliers />
+        },
+        {
+            path:"/admin/dashboard/comments",
+            element: <Comments/>
+        },
+        {
+            path:"/admin/dashboard/addsuppliers",
+            element: <AddSupplier/>
+        },
+        {
+            path:"/admin/dashboard/updatesuppliers/:supplierId",
+            element: <UpdateSupplier/>
+        },
+        {
+            path:"/admin/dashboard/categories-bookreceipt",
+            element: <CategoryBookReceipt/>
+        },
+        {
+            path:"/admin/dashboard/news",
+            element: <AdminNews/>
+        },
+        {
+            path:"/admin/dashboard/addnews",
+            element: <AddNews/>
+        },
+        {
+            path:"/admin/dashboard/updatenews/:newsId",
+            element: <UpdateNews/>
+        },
+        {
+            path:"/admin/dashboard/request-return",
+            element: <Request/>
+        }
     ]
 }
 ]);

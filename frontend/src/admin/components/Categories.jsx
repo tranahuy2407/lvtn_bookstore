@@ -1,22 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Modal, message, Select } from 'antd';
+
+const { Option } = Select;
 
 function Categories() {
     const [categories, setCategories] = useState([]);
+    const [categoryTypes, setCategoryTypes] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [categoriesPerPage] = useState(4); // Số lượng thể loại hiển thị trên mỗi trang
+    const [categoriesPerPage] = useState(6);
     const [totalPages, setTotalPages] = useState(0);
     const [error, setError] = useState('');
+    const [filterType, setFilterType] = useState('');
     const [message, setMessage] = useState('');
-    const navigate = useNavigate(); // Sử dụng useNavigate để chuyển hướng
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchCategoryTypes = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/category-types');
+                setCategoryTypes(response.data);
+            } catch (error) {
+                setError('Error fetching category types');
+                console.error('Error fetching category types:', error);
+            }
+        };
+
+        fetchCategoryTypes();
+    }, []);
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/categories');
+                const response = filterType 
+                    ? await axios.get(`http://localhost:5000/api/categories/${filterType}`)
+                    : await axios.get('http://localhost:5000/api/categories');
                 setCategories(response.data);
-                // Tính toán số lượng trang dựa trên số lượng thể loại
                 setTotalPages(Math.ceil(response.data.length / categoriesPerPage));
             } catch (error) {
                 setError('Error fetching categories');
@@ -25,43 +46,51 @@ function Categories() {
         };
 
         fetchCategories();
-    }, [categoriesPerPage]); // Sử dụng categoriesPerPage để cập nhật lại khi thay đổi số lượng trang
+    }, [categoriesPerPage, filterType]);
 
-    const handleDelete = async (categoryId) => {
-        try {
-            const response = await axios.delete(`http://localhost:5000/api/categories/${categoryId}`);
-            setMessage(response.data.message);
-            // Sau khi xóa, cần fetch lại danh sách thể loại
-            const newCategories = categories.filter(category => category._id !== categoryId);
-            setCategories(newCategories);
-            setTotalPages(Math.ceil(newCategories.length / categoriesPerPage)); // Cập nhật lại số lượng trang
-            // Nếu xóa phần tử cuối cùng trên trang hiện tại và trang hiện tại trở thành trang trống, quay lại trang trước đó
-            if (currentPage > Math.ceil(newCategories.length / categoriesPerPage)) {
-                setCurrentPage(currentPage - 1);
-            }
-        } catch (error) {
-            console.error('Error deleting category:', error);
-            setMessage('Xóa thể loại thất bại');
-        }
+    const handleDelete = (categoryId) => {
+        Modal.confirm({
+            title: 'Bạn có chắc chắn muốn xóa thể loại này không?',
+            content: 'Hành động này không thể hoàn tác.',
+            okText: 'Có',
+            cancelText: 'Không',
+            onOk: async () => {
+                try {
+                    const response = await axios.delete(`http://localhost:5000/api/categories/${categoryId}`);
+                    setMessage(response.data.message);
+                    const newCategories = categories.filter(category => category._id !== categoryId);
+                    setCategories(newCategories);
+                    setTotalPages(Math.ceil(newCategories.length / categoriesPerPage));
+                    if (currentPage > Math.ceil(newCategories.length / categoriesPerPage)) {
+                        setCurrentPage(currentPage - 1);
+                    }
+                } catch (error) {
+                    console.error('Error deleting category:', error);
+                    setMessage('Xóa thể loại thất bại');
+                }
+            },
+        });
     };
 
     const handleAddCategory = () => {
-        navigate('/admin/dashboard/addcategories'); // Chuyển hướng sang trang thêm thể loại
+        navigate('/admin/dashboard/addcategories');
     };
 
-    // Tính toán index của thể loại đầu tiên và cuối cùng trên trang hiện tại
+    const handleTypeChange = (value) => {
+        setFilterType(value);
+        setCurrentPage(1);
+    };
+
     const indexOfLastCategory = currentPage * categoriesPerPage;
     const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
     const currentCategories = categories.slice(indexOfFirstCategory, indexOfLastCategory);
 
-    // Chuyển đổi sang trang trước đó
     const handlePreviousPage = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
     };
 
-    // Chuyển đổi sang trang kế tiếp
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -70,22 +99,34 @@ function Categories() {
 
     return (
         <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
-            <strong className='text-gray-700 font-medium'>Danh sách thể loại</strong>
+            <div className="flex justify-between items-center">
+                <strong className='text-gray-700 font-medium'>Danh sách thể loại</strong>
+                <Select
+                    placeholder="Chọn loại"
+                    onChange={handleTypeChange}
+                    style={{ width: 200 }}
+                >
+                    <Option value="">Tất cả</Option>
+                    {categoryTypes.map((type, index) => (
+                        <Option key={index} value={type}>{type}</Option>
+                    ))}
+                </Select>
+            </div>
             {message && <div className="text-green-500 mt-2">{message}</div>}
             {error && <div className="text-red-500 mt-2">{error}</div>}
             <div className="mt-4 flex justify-start">
-                    <button
-                        onClick={handleAddCategory}
-                        className='bg-green-500 text-white px-4 py-2 rounded'
-                    >
-                        Thêm thể loại
-                    </button>
+                <button
+                    onClick={handleAddCategory}
+                    className='bg-green-500 text-white px-4 py-2 rounded'
+                >
+                    Thêm thể loại
+                </button>
             </div>
             <div className='mt-3'>
                 <table className='w-full text-gray-700'>
                     <thead>
                         <tr>
-                            <th className='border border-gray-300'>ID</th>
+                            <th className='border border-gray-300'>STT</th>
                             <th className='border border-gray-300'>Tên thể loại</th>
                             <th className='border border-gray-300'>Mô tả</th>
                             <th className='border border-gray-300'>Hình ảnh</th>
@@ -93,34 +134,35 @@ function Categories() {
                         </tr>
                     </thead>
                     <tbody>
-                        {currentCategories.map(category => (
+                        {currentCategories.map((category, index) => (
                             <tr key={category._id}>
-                                <td className='border border-gray-300'>{category._id}</td>
-                                <td className='border border-gray-300'>{category.name}</td>
-                                <td className='border border-gray-300'>{category.description}</td>
-                                <td className='border border-gray-300'><img src={category.image} alt={category.name} /></td>
-                                <td className='border border-gray-300'>
+                                <td className='border border-gray-300 text-center'>{(currentPage - 1) * categoriesPerPage + index + 1}</td>
+                                <td className='border border-gray-300 text-center'>{category.name}</td>
+                                <td className='border border-gray-300 text-center'>{category.description}</td>
+                                <td className='border border-gray-300 text-center'>
+                                    <img src={category.image} alt={category.name} className='h-16 w-16 object-contain mx-auto' />
+                                </td>
+                                <td className='border border-gray-300 text-center'>
                                     <Link
                                         to={{
                                             pathname: `/admin/dashboard/updatecategory/${category._id}`,
-                                            state: { category } // Truyền thông tin thể loại vào props state
+                                            state: { category }
                                         }}
                                         className='text-blue-500 mr-2'
                                     >
-                                        Sửa
+                                        <EditOutlined />
                                     </Link>
                                     <button
                                         onClick={() => handleDelete(category._id)}
                                         className='text-red-500'
                                     >
-                                        Xóa
+                                        <DeleteOutlined />
                                     </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                {/* Phân trang */}
                 <div className="mt-3 flex justify-between items-center">
                     <button
                         onClick={handlePreviousPage}

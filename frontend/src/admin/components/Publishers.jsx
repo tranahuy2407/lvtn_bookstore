@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
 function Publishers() {
     const [publishers, setPublishers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [publishersPerPage] = useState(4); 
+    const [publishersPerPage] = useState(4);
     const [totalPages, setTotalPages] = useState(0);
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
@@ -29,7 +30,7 @@ function Publishers() {
             await axios.delete(`http://localhost:5000/api/publisher/${id}`);
             const newPublishers = publishers.filter(publisher => publisher._id !== id);
             setPublishers(newPublishers);
-            setTotalPages(Math.ceil(newPublishers.length / publishersPerPage)); 
+            setTotalPages(Math.ceil(newPublishers.length / publishersPerPage));
             setMessage('Xóa nhà xuất bản thành công');
             if (currentPage > Math.ceil(newPublishers.length / publishersPerPage)) {
                 setCurrentPage(currentPage - 1);
@@ -79,31 +80,33 @@ function Publishers() {
                 <table className='w-full text-gray-700'>
                     <thead>
                         <tr>
-                            <th className="w-1/6 border border-gray-300">ID</th>
-                            <th className="w-1/3 border border-gray-300">Tên nhà xuất bản</th>
-                            <th className="w-1/3 border border-gray-300">Mô tả</th>
-                            <th className="w-1/6 border border-gray-300">Hành động</th>
+                            <th className="w-1/12 border border-gray-300 text-center">STT</th>
+                            <th className="w-1/3 border border-gray-300 text-center">Tên nhà xuất bản</th>
+                            <th className="w-1/3 border border-gray-300 text-center">Mô tả</th>
+                            <th className="w-1/6 border border-gray-300 text-center">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentPublishers.map(publisher => (
+                        {currentPublishers.map((publisher, index) => (
                             <tr key={publisher._id}>
-                                <td className="w-1/6 border border-gray-300">{publisher._id}</td>
-                                <td className="w-1/3 border border-gray-300">{publisher.name}</td>
-                                <td className="w-1/3 border border-gray-300">{publisher.description}</td>
-                                <td className="w-1/6 border border-gray-300">
-                                    <Link
-                                        to={`/admin/dashboard/updatepublishers/${publisher._id}`} // Ensure the URL includes the id parameter
-                                        className='text-blue-500 mr-2'
-                                    >
-                                        Sửa
-                                    </Link>
-                                    <button
-                                        onClick={() => handleDelete(publisher._id)}
-                                        className='text-red-500'
-                                    >
-                                        Xóa
-                                    </button>
+                                <td className="w-1/12 border border-gray-300 text-center">{indexOfFirstPublisher + index + 1}</td>
+                                <td className="w-1/3 border border-gray-300 text-center">{publisher.name}</td>
+                                <td className="w-1/3 border border-gray-300 text-center">{publisher.description}</td>
+                                <td className="w-1/6 border border-gray-300 text-center">
+                                    <div className='flex justify-center items-center space-x-4'>
+                                        <Link
+                                            to={`/admin/dashboard/updatepublishers/${publisher._id}`}
+                                            className='text-blue-500 flex items-center'
+                                        >
+                                            <FaEdit className='text-xl' />
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDelete(publisher._id)}
+                                            className='text-red-500 flex items-center'
+                                        >
+                                            <FaTrash className='text-xl' />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

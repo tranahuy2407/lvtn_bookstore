@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { IoBagHandle } from 'react-icons/io5';
 
 function DashboardStatsGrid() {
-  const [categoryCount, setCategoryCount] = useState(0); // State để lưu số lượng thể loại
-  const [publisherCount, setPublisherCount] = useState(0); // State để lưu số lượng nhà xuất bản
-
+  const [categoryCount, setCategoryCount] = useState(0); 
+  const [publisherCount, setPublisherCount] = useState(0);
+    const [productCount, setProductCount] = useState(0);
+    const [orderCount, setOrderCount] = useState(0);
   useEffect(() => {
-    // Gọi API để lấy số lượng thể loại
     const fetchCategoryCount = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/category/count');
+        const response = await fetch('http://localhost:5000/api/categories');
         if (!response.ok) {
           throw new Error('Failed to fetch category count');
         }
         const data = await response.json();
-        setCategoryCount(data.count); // Cập nhật state với số lượng thể loại từ API
+        setCategoryCount(data.length); // Cập nhật state với số lượng thể loại từ API
       } catch (error) {
         console.error('Error fetching category count:', error);
       }
@@ -23,18 +23,47 @@ function DashboardStatsGrid() {
     // Gọi API để lấy số lượng nhà xuất bản
     const fetchPublisherCount = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/publisher/count');
+        const response = await fetch('http://localhost:5000/api/publishers');
         if (!response.ok) {
           throw new Error('Failed to fetch publisher count');
         }
         const data = await response.json();
-        setPublisherCount(data.count); // Cập nhật state với số lượng nhà xuất bản từ API
+        setPublisherCount(data.length); // Cập nhật state với số lượng nhà xuất bản từ API
+      } catch (error) {
+        console.error('Error fetching publisher count:', error);
+      }
+    };
+    // Gọi API để lấy số lượng sản phẩm
+    const fetchProductCount = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch publisher count');
+        }
+        const data = await response.json();
+        setProductCount(data.length); // Cập nhật state với số lượng nhà xuất bản từ API
+      } catch (error) {
+        console.error('Error fetching publisher count:', error);
+      }
+    };
+
+    // Gọi API để lấy số lượng đơn hàng
+    const fetchOrderCount = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/all-orders');
+        if (!response.ok) {
+          throw new Error('Failed to fetch publisher count');
+        }
+        const data = await response.json();
+        setOrderCount(data.length); // Cập nhật state với số lượng nhà xuất bản từ API
       } catch (error) {
         console.error('Error fetching publisher count:', error);
       }
     };
 
     // Gọi hàm fetchCategoryCount và fetchPublisherCount khi component được render
+    fetchOrderCount();
+    fetchProductCount();
     fetchCategoryCount();
     fetchPublisherCount();
   }, []);
@@ -48,7 +77,7 @@ function DashboardStatsGrid() {
         <div className='pl-4'>
           <span className='text-sm text-gray-500 font-light'>Đơn đặt hàng</span>
           <div className='flex items-center'>
-            <strong className='text-xl text-gray-700 font-semibold'>$1234</strong>
+            <strong className='text-xl text-gray-700 font-semibold'>{orderCount}</strong>
           </div>
         </div>
       </BoxWrapper>
@@ -59,7 +88,7 @@ function DashboardStatsGrid() {
         <div className='pl-4'>
           <span className='text-sm text-gray-500 font-light'>Sản phẩm</span>
           <div className='flex items-center'>
-            <strong className='text-xl text-gray-700 font-semibold'>$1234</strong>
+            <strong className='text-xl text-gray-700 font-semibold'>{productCount}</strong>
           </div>
         </div>
       </BoxWrapper>

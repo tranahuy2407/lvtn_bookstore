@@ -1,0 +1,150 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Form, Input, Button, Upload, message, DatePicker, InputNumber } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import moment from 'moment';
+
+const EditPromotionForm = ({ promotion, onClose }) => {
+  const UPLOAD_PRESET = "yznfezyj";
+  const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmcfhbwbb/upload";
+
+  const [updatedPromotion, setUpdatedPromotion] = useState(promotion);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageName, setImageName] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [messageInfo, setMessageInfo] = useState('');
+
+  useEffect(() => {
+    setUpdatedPromotion(promotion);
+    setImageUrl(promotion.image || '');
+    if (promotion.image) {
+      setImageName(promotion.image.split('/').pop());
+    }
+  }, [promotion]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUpdatedPromotion({ ...updatedPromotion, [name]: value });
+  };
+
+  const handleValueChange = (name, value) => {
+    setUpdatedPromotion({ ...updatedPromotion, [name]: value });
+  };
+
+  const handleImageUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', 'Khuyến mãi');
+    try {
+      const response = await axios.post(CLOUDINARY_URL, formData);
+      const imageUrl = response.data.secure_url;
+      setUpdatedPromotion({ ...updatedPromotion, image: imageUrl });
+      setImageName(file.name);
+      setImageUrl(imageUrl);
+      message.success('Tải lên hình ảnh thành công!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      message.error('Tải lên hình ảnh thất bại.');
+    }
+  };
+
+  const handleUpdatePromotion = async () => {
+    setUploading(true);
+    try {
+      await axios.put(`http://localhost:5000/api/updatepromotion/${updatedPromotion._id}`, updatedPromotion);
+      message.success('Cập nhật khuyến mãi thành công!');
+      onClose();
+    } catch (error) {
+      console.error('Error updating promotion:', error);
+      message.error('Cập nhật khuyến mãi thất bại.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-md shadow-lg max-w-2xl mx-auto">
+      <h2 className="text-lg font-medium mb-4">Chỉnh sửa khuyến mãi</h2>
+      <Form layout="vertical">
+        <Form.Item label="Mô tả">
+          <Input name="description" value={updatedPromotion.description} onChange={handleChange} />
+        </Form.Item>
+        <Form.Item label="Loại">
+          <Input name="type" value={updatedPromotion.type} onChange={handleChange} />
+        </Form.Item>
+        <Form.Item label="Mã">
+          <Input name="code" value={updatedPromotion.code} onChange={handleChange} />
+        </Form.Item>
+        <Form.Item label="Giá trị">
+          <InputNumber
+            name="value"
+            value={updatedPromotion.value}
+            onChange={(value) => handleValueChange('value', value)}
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+        <div className="flex space-x-4">
+          <Form.Item label="Ngày bắt đầu" className="flex-1">
+            <DatePicker
+              value={updatedPromotion.start_day ? moment(updatedPromotion.start_day) : null}
+              onChange={(date) => handleValueChange('start_day', date ? date.toISOString() : null)}
+              style={{ width: '100%' }}
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+          <Form.Item label="Ngày kết thúc" className="flex-1">
+            <DatePicker
+              value={updatedPromotion.end_day ? moment(updatedPromotion.end_day) : null}
+              onChange={(date) => handleValueChange('end_day', date ? date.toISOString() : null)}
+              style={{ width: '100%' }}
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+        </div>
+        <Form.Item label="Hình ảnh">
+          <Upload
+            beforeUpload={(file) => {
+              handleImageUpload(file);
+              return false; // Prevent automatic upload
+            }}
+            onChange={(info) => {
+              const { file } = info;
+              if (file.status === 'done') {
+                setImageFile(file.originFileObj);
+                setImageName(file.name);
+                setImageUrl(URL.createObjectURL(file.originFileObj));
+              } else if (file.status === 'error') {
+                setImageFile(null);
+                setImageName('');
+                setImageUrl('');
+              }
+            }}
+            maxCount={1}
+            showUploadList={false}
+          >
+            <Button icon={<UploadOutlined />}>Tải lên hình ảnh</Button>
+          </Upload>
+          {imageName && <p className="mt-2 text-gray-500">File đã tải lên: {imageName}</p>}
+          {imageUrl && <img src={imageUrl} alt="Promotion" className="mt-2 w-32 h-32 object-contain" />}
+        </Form.Item>
+        <Form.Item>
+          <Button
+            type="primary"
+            onClick={handleUpdatePromotion}
+            disabled={uploading}
+          >
+            {uploading ? 'Đang tải lên...' : 'Lưu thay đổi'}
+          </Button>
+          <Button type="default" onClick={onClose} className="ml-2">
+            Hủy
+          </Button>
+        </Form.Item>
+        {messageInfo && <p className='mt-3 text-green-500'>{messageInfo}</p>}
+      </Form>
+    </div>
+  );
+};
+
+export default EditPromotionForm;

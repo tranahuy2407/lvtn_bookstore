@@ -1,96 +1,122 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { Form, Input, Button, Upload, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
-function AddAuthor() {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-
+const AddAuthor = () => {
+  const [form] = Form.useForm();
+  const [imageFile, setImageFile] = useState(null);
+  const [imageName, setImageName] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const UPLOAD_PRESET = "yznfezyj"; // Replace with your Cloudinary preset
+  const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmcfhbwbb/image/upload";
 
+  const handleUploadImage = async (file) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/addauthors', {
-        name,
-        description,
-        image
+      if (!file || !file.type.startsWith("image/")) {
+        throw new Error("Bạn chỉ có thể tải lên ảnh!");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
+      formData.append("folder", `Tác Giả/${form.getFieldValue("name")}`);
+
+      const response = await axios.post(CLOUDINARY_URL, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: false, 
       });
 
-    
-      setMessage(response.data.message);
-      setName('');
-      setDescription('');
-      setImage('');
-      
-      // Điều hướng về trang danh sách tác giả sau khi thêm thành công
-      setTimeout(() => {
-        navigate('/admin/dashboard/authors');
-      }, 1000);
+      if (response.status === 200) {
+        return response.data.secure_url;
+      } else {
+        throw new Error("Failed to upload image");
+      }
     } catch (error) {
-      setMessage('Thêm không thành công');
-      console.error('Error adding author:', error);
+      console.error("Error uploading image:", error);
+      setError(`Lỗi tải lên hình ảnh: ${error.message}`);
+      message.error(`Tải lên hình ảnh thất bại: ${error.message}`);
+      return null;
     }
   };
 
+  const handleFinish = async (values) => {
+    if (!imageFile) {
+      setError("Vui lòng chọn một hình ảnh.");
+      return;
+    }
+
+    const imageUrl = await handleUploadImage(imageFile);
+    if (!imageUrl) return;
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/addauthors", {
+        ...values,
+        image: imageUrl,
+      });
+
+      message.success(response.data.message);
+      form.resetFields();
+      setImageFile(null);
+      setImageName("");
+      setError("");
+
+      setTimeout(() => {
+        navigate("/admin/dashboard/authors");
+      }, 1000);
+    } catch (error) {
+      message.error("Thêm không thành công");
+      console.error("Error adding author:", error);
+    }
+  };
+
+  const handleFileChange = (file) => {
+    setImageFile(file);
+    setImageName(file.name);
+    return false;
+  };
+
   return (
-    <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
-      <strong className='text-gray-700 font-medium'>Thêm tác giả</strong>
-      <form className='mt-3' onSubmit={handleSubmit}>
-        <div className='mb-4 flex items-center'>
-          <label className='block text-gray-700 text-sm font-bold mb-2 w-1/4' htmlFor='name'>
-            Tên tác giả
-          </label>
-          <input
-            type='text'
-            id='name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className='shadow appearance-none border rounded w-3/4 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-          />
-        </div>
-        <div className='mb-4 flex items-center'>
-          <label className='block text-gray-700 text-sm font-bold mb-2 w-1/4' htmlFor='description'>
-            Mô tả
-          </label>
-          <textarea
-            id='description'
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-            className='shadow appearance-none border rounded w-3/4 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-10'
-           
-          />
-        </div>
-        <div className='mb-4 flex items-center'>
-          <label className='block text-gray-700 text-sm font-bold mb-2 w-1/4' htmlFor='image'>
-            Hình ảnh
-          </label>
-          <input
-            type='text'
-            id='image'
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            required
-            className='shadow appearance-none border rounded w-3/4 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-          />
-        </div>
-        <button
-          type='submit'
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline'
+    <div className="bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1">
+      <strong className="text-gray-700 font-medium">Thêm tác giả</strong>
+      <Form form={form} layout="vertical" onFinish={handleFinish} className="mt-3">
+        <Form.Item
+          label="Tên tác giả"
+          name="name"
+          rules={[{ required: true, message: "Vui lòng nhập tên tác giả" }]}
         >
-          Thêm
-        </button>
-        {message && <p className='mt-3 text-green-500'>{message}</p>}
-        {error && <p className='mt-3 text-red-500'>{error}</p>}
-      </form>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Mô tả"
+          name="description"
+          rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
+        >
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item
+          label="Hình ảnh"
+          rules={[{ required: true, message: "Vui lòng chọn một hình ảnh" }]}
+        >
+          <Upload beforeUpload={handleFileChange} showUploadList={false}>
+            <Button icon={<UploadOutlined />}>Chọn hình ảnh</Button>
+          </Upload>
+          {imageName && <p className="mt-2 text-gray-700">Tệp đã chọn: {imageName}</p>}
+          {error && <p className="mt-2 text-red-500">{error}</p>}
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Thêm
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
-}
+};
 
 export default AddAuthor;

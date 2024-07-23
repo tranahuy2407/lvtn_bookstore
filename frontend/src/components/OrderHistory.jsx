@@ -64,6 +64,13 @@ const OrderHistory = () => {
                     </div>
                   </dl>
                   <Link
+                    to={`/ratings/${order._id}`}
+                    className="mt-6 flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
+                  >
+                    Đánh giá đơn hàng
+                    <span className="sr-only">cho mã đơn {order._id}</span>
+                  </Link>
+                  <Link
                     to={`/invoice/${order._id}`}
                     className="mt-6 flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
                   >

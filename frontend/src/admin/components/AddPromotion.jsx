@@ -1,167 +1,168 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Form, Input, Button, message, Row, Col, Upload, Select, DatePicker } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
-function AddPromotion() {
-  const [formData, setFormData] = useState({
-    description: '',
-    image: '',
-    type: '',
-    code: '',
-    value: '',
-    conditional: '',
-    limit: '',
-    start_day: '',
-    end_day: '',
-  });
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+const { Option } = Select;
 
+const AddPromotion = () => {
+  const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [messageApi, contextHolder] = message.useMessage();
+  const [imageFile, setImageFile] = useState(null);
+  const [imageName, setImageName] = useState('');
+  const [uploading, setUploading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  const UPLOAD_PRESET = 'yznfezyj';
+  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmcfhbwbb/image/upload';
 
-  const handleAddPromotion = async (e) => {
-    e.preventDefault();
+  const handleAddPromotion = async (values) => {
+    setUploading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/promotion/add', formData);
-      console.log(response.data);
-      setMessage('Promotion added successfully');
-      setFormData({
-        description: '',
-        image: '',
-        type: '',
-        code: '',
-        value: '',
-        conditional: '',
-        limit: '',
-        start_day: '',
-        end_day: '',
-      });
-      navigate('/promotions'); // Redirect to promotions list page
+      let imageUrl = null;
+
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'Khuyến mãi');
+
+        const response = await axios.post(CLOUDINARY_URL, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          withCredentials: false,
+        });
+
+        imageUrl = response.data.secure_url;
+      }
+
+      const status = values.status === 'Hiển thị' ? 1 : 0;
+
+      const newPromotion = { ...values, image: imageUrl, status };
+      await axios.post('http://localhost:5000/api/addpromotion', newPromotion);
+      messageApi.success('Promotion added successfully');
+      form.resetFields();
+      setImageFile(null);
+      setImageName('');
+      navigate('/admin/dashboard/promotions');
     } catch (error) {
       console.error('Error adding promotion:', error);
-      setError('Error adding promotion');
+      messageApi.error('Error adding promotion');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleUploadImage = (file) => {
+    if (!file.type.startsWith('image/')) {
+      messageApi.error('Bạn chỉ có thể tải lên hình ảnh!');
+      return false;
+    }
+    setImageFile(file);
+    setImageName(file.name);
+    return false; // Prevent auto upload by Ant Design
+  };
+
+  const handleDateChange = (date, dateString) => {
+    const startDate = form.getFieldValue('start_day');
+    if (dateString && startDate && dateString < startDate) {
+      messageApi.error('Ngày kết thúc phải chọn sau ngày bắt đầu');
+      form.setFieldsValue({ end_day: '' });
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg ">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Thêm Mã Khuyến Mãi</h2>
-      {message && <div className="text-green-500 mb-4">{message}</div>}
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      <form onSubmit={handleAddPromotion} className=''>
-        <div className="mb-4">
-          <label className="block text-gray-700">Mô tả</label>
-          <input
-            type="text"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">URL Hình ảnh</label>
-          <input
-            type="text"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Loại</label>
-          <input
-            type="text"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Mã</label>
-          <input
-            type="text"
-            name="code"
-            value={formData.code}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Giá trị</label>
-          <input
-            type="number"
-            name="value"
-            value={formData.value}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Điều kiện</label>
-          <input
-            type="number"
-            name="conditional"
-            value={formData.conditional}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Giới hạn</label>
-          <input
-            type="number"
-            name="limit"
-            value={formData.limit}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Ngày bắt đầu</label>
-          <input
-            type="date"
-            name="start_day"
-            value={formData.start_day}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Ngày kết thúc</label>
-          <input
-            type="date"
-            name="end_day"
-            value={formData.end_day}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300">
-          Thêm mã khuyến mãi
-        </button>
-      </form>
+    <div className='max-w-4xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg'>
+      {contextHolder}
+      <h2 className='text-2xl font-bold mb-6 text-center text-gray-800'>Thêm Mã Khuyến Mãi</h2>
+      <Form form={form} onFinish={handleAddPromotion} layout='vertical'>
+        <Form.Item label='Mô tả' name='description' rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label='Trạng thái' name='status' rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}>
+          <Select placeholder='Chọn trạng thái'>
+            <Option value='Hiển thị'>Hiển thị</Option>
+            <Option value='Ẩn'>Ẩn</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item label='Hình ảnh' name='image'>
+          <Upload
+            beforeUpload={handleUploadImage}
+            showUploadList={false}
+            maxCount={1}
+            className='mt-1 block w-full'
+          >
+            <Button icon={<UploadOutlined />}>Tải lên hình ảnh</Button>
+          </Upload>
+          {imageName && <span style={{ marginLeft: 8 }}>Hình ảnh đã chọn: {imageName}</span>}
+        </Form.Item>
+        <Form.Item label='Loại' name='type' rules={[{ required: true, message: 'Vui lòng chọn loại' }]}>
+          <Select placeholder='Chọn loại'>
+            <Option value='percent'>Giảm phần trăm</Option>
+            <Option value='money'>Giảm tiền</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item label='Mã' name='code' rules={[{ required: true, message: 'Vui lòng nhập mã' }]}>
+          <Input />
+        </Form.Item>
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item label='Giá trị' name='value' rules={[{ required: true, message: 'Vui lòng nhập giá trị' }]}>
+              <Input type='number' />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label='Điều kiện' name='conditional' rules={[{ required: true, message: 'Vui lòng nhập điều kiện' }]}>
+              <Input type='number' />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label='Giới hạn' name='limit' rules={[{ required: true, message: 'Vui lòng nhập giới hạn' }]}>
+              <Input type='number' />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label='Ngày bắt đầu'
+              name='start_day'
+              rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                defaultValue={dayjs()}
+                format='DD/MM/YYYY'
+                disabledDate={(current) => current && current < dayjs().startOf('day')}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label='Ngày kết thúc'
+              name='end_day'
+              rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                format='DD/MM/YYYY'
+                onChange={handleDateChange}
+                disabledDate={(current) => current && current <= form.getFieldValue('start_day')}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Form.Item>
+          <Button type='primary' htmlType='submit' className='w-full' loading={uploading}>
+            Thêm mã khuyến mãi
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
-}
+};
 
 export default AddPromotion;

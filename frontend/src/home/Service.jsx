@@ -13,7 +13,7 @@ const Service = () => {
                         <path d="M24.6667 28.0002C26.5077 28.0002 28 26.5078 28 24.6668C28 22.8259 26.5077 21.3335 24.6667 21.3335C22.8258 21.3335 21.3334 22.8259 21.3334 24.6668C21.3334 26.5078 22.8258 28.0002 24.6667 28.0002Z" stroke="#4B5563" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <h3 className=" text-xl leading-5 font-semibold text-gray-800 lg:mt-10 mt-8 ">Giao hàng</h3>
-                    <p className=" text-base leading-6 font-normal text-gray-600 mt-4 lg:w-full md:w-9/12 w-full">Free worldwide delivery over orders above $100</p>
+                    <p className=" text-base leading-6 font-normal text-gray-600 mt-4 lg:w-full md:w-9/12 w-full">Hỗ trợ giao hàng trên 63 tỉnh thành toàn quốc</p>
                 </div>
 
                 {/* customer Grid Card */}
@@ -24,7 +24,7 @@ const Service = () => {
                     </svg>
                     <h3 className=" text-xl leading-5 font-semibold text-gray-800 lg:mt-10 mt-8 ">Chăm sóc khách hàng</h3>
                     <p className=" text-base leading-6 font-normal text-gray-600 mt-4 lg:w-full md:w-9/12 w-full">
-                        Our customer care is available 24/7 at <span className=" font-semibold cursor-pointer">+84 343 899 504</span> và <span className=" font-semibold cursor-pointer">tranahuy247@gmail.com</span>
+                        Hỗ trọ khách hàng 24/7 tại số điện thoại và email là <span className=" font-semibold cursor-pointer">+84 343 899 504</span> và <span className=" font-semibold cursor-pointer">tranahuy247@gmail.com</span>
                     </p>
                 </div>
 
@@ -46,7 +46,7 @@ const Service = () => {
                         <path d="M15.9999 29.3332C15.9999 29.3332 26.6666 23.9998 26.6666 15.9998V6.6665L15.9999 2.6665L5.33325 6.6665V15.9998C5.33325 23.9998 15.9999 29.3332 15.9999 29.3332Z" stroke="#1F2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <h3 className=" text-xl leading-5 font-semibold text-gray-800 lg:mt-10 mt-8 ">Thanh toán an toàn</h3>
-                    <p className=" text-base leading-6 font-normal text-gray-600 mt-4 lg:w-full md:w-9/12 w-full">Transaction process has end to end encryption</p>
+                    <p className=" text-base leading-6 font-normal text-gray-600 mt-4 lg:w-full md:w-9/12 w-full">Hỗ trợ nhiều phương thức thanh toán</p>
                 </div>
             </div>
         </div>

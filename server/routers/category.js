@@ -11,6 +11,17 @@ categoryRouter.get("/api/categories", async (req, res) => {
   }
 });
 
+//Lấy tất tất cả type 
+categoryRouter.get('/api/category-types', async (req, res) => {
+  try {
+    const types = await Category.distinct('type');
+    res.json(types);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // GET categories by type
 categoryRouter.get("/api/categories/:type", async (req, res) => {
   const type = req.params.type;
@@ -43,13 +54,14 @@ categoryRouter.get("/api/category/:id", async (req, res) => {
 //Thêm thể loại
 categoryRouter.post('/api/addcategories', async (req, res) => {
   try {
-    const { name, description, image } = req.body;
+    const { name, description, image, type } = req.body;
 
     // Create a new category instance
     const newCategory = new Category({
       name,
       description,
-      image
+      type,
+      image,
     });
 
     // Save the category to the database
@@ -66,7 +78,6 @@ categoryRouter.post('/api/addcategories', async (req, res) => {
 //Xoá thể loại 
 categoryRouter.delete('/api/categories/:categoryId', async (req, res) => {
   const { categoryId } = req.params;
-
   try {
     // Tìm và xoá thể loại dựa trên categoryId
     const deletedCategory = await Category.findByIdAndDelete(categoryId);
@@ -82,28 +93,25 @@ categoryRouter.delete('/api/categories/:categoryId', async (req, res) => {
   }
 });
 
-//tìm thể loại theo id
-categoryRouter.get('/api/categories/:categoryId', async (req, res) => {
-  const { categoryId } = req.params;
+// Tìm thể loại theo ID
 
+categoryRouter.get("/categories/:id", async (req, res) => {
+  const { id } = req.params;
   try {
-    const category = await Category.findById(categoryId);
-
+    const category = await Category.findById(id);
     if (!category) {
-      return res.status(404).json({ error: 'Category not found' });
+      return res.status(404).json({ message: "Category not found" });
     }
-
     res.json(category);
   } catch (error) {
-    console.error('Error fetching category by ID:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message });
   }
 });
 
 //cập nhật thông tin thể loại
 categoryRouter.put('/api/categories/:categoryId', async (req, res) => {
   const { categoryId } = req.params;
-  const { name, description, image } = req.body;
+  const { name, description, image, type } = req.body;
 
   try {
     let category = await Category.findById(categoryId);
@@ -115,8 +123,9 @@ categoryRouter.put('/api/categories/:categoryId', async (req, res) => {
     // Cập nhật thông tin thể loại
     category.name = name;
     category.description = description;
+    category.type = type;
     category.image = image;
-
+    
     // Lưu lại vào database
     const updatedCategory = await category.save();
 
@@ -145,14 +154,5 @@ res.json({ name: category.name });
 });
 
 
-//tính số lượng thể loại
-categoryRouter.get('/api/category/count', async (req, res) => {
-  try {
-    const count = await Category.countDocuments();
-    res.json({ count });
-  } catch (error) {
-    console.error('Error fetching category count:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+
 module.exports = categoryRouter;

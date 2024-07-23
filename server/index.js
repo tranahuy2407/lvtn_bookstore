@@ -12,6 +12,8 @@ const favouriteRouter = require("./routers/favourite");
 const publisherRouter = require("./routers/publisher");
 const orderRouter = require("./routers/order");
 const invoiceRouter = require("./routers/invoice");
+const bookReceiptRouter = require("./routers/bookreceipt");
+const newRouter = require("./routers/new");
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -36,8 +38,8 @@ app.use(promotionRouter);
 app.use(favouriteRouter);
 app.use(orderRouter);
 app.use(invoiceRouter);
-
-
+app.use(bookReceiptRouter);
+app.use(newRouter);
 
 mongoose
   .connect(DB)

@@ -12,7 +12,7 @@ try {
     },
     description: {
       type: String,
-      required: true,
+      default:"",
     },
     image: {
       type: String,
@@ -21,6 +21,7 @@ try {
     country: {
       type: [String],
       required: true,
+      default: ["Sách trong nước"],
     },
     type: {
       type: String,

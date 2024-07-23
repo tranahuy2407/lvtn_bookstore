@@ -73,6 +73,7 @@ promotionRouter.post("/api/addpromotion", async (req, res) => {
   const {
       description,
       image,
+      status,
       type,
       code,
       value,
@@ -86,6 +87,7 @@ promotionRouter.post("/api/addpromotion", async (req, res) => {
       const newPromotion = new Promotion({
           description,
           image,
+          status,
           type,
           code,
           value,
@@ -100,6 +102,44 @@ promotionRouter.post("/api/addpromotion", async (req, res) => {
   } catch (error) {
       console.error("Lỗi không thể thêm khuyến mãi:", error);
       res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+
+// Cập nhật khuyến mãi theo id
+promotionRouter.put("/api/updatepromotion/:id", async (req, res) => {
+  const promotionId = req.params.id;
+  const updateData = req.body;
+
+  try {
+    const updatedPromotion = await Promotion.findByIdAndUpdate(promotionId, updateData, { new: true });
+
+    if (!updatedPromotion) {
+      return res.status(404).json({ message: "Không tìm thấy khuyến mãi để cập nhật" });
+    }
+
+    res.status(200).json({ message: "Cập nhật thành công", promotion: updatedPromotion });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật khuyến mãi:", error);
+    res.status(500).json({ message: "Đã xảy ra lỗi máy chủ" });
+  }
+});
+
+// Xóa khuyến mãi theo id
+promotionRouter.delete("/api/deletepromotion/:id", async (req, res) => {
+  const promotionId = req.params.id;
+
+  try {
+    const deletedPromotion = await Promotion.findByIdAndDelete(promotionId);
+
+    if (!deletedPromotion) {
+      return res.status(404).json({ message: "Không tìm thấy khuyến mãi để xóa" });
+    }
+
+    res.status(200).json({ message: "Xóa thành công" });
+  } catch (error) {
+    console.error("Lỗi khi xóa khuyến mãi:", error);
+    res.status(500).json({ message: "Đã xảy ra lỗi máy chủ" });
   }
 });
 
