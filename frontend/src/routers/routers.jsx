@@ -46,6 +46,8 @@ import AdminNews from "../admin/news/AdminNews";
 import AddNews from "../admin/news/AddNews";
 import UpdateNews from "../admin/news/UpdateNews";
 import Request from "../admin/customer-service/Request";
+import ViewBookReceipt from "../admin/bookreceipt/ViewBookReceipt";
+import EditBookReceipt from "../admin/bookreceipt/EditBookReceipt";
 
 const router = createBrowserRouter([
   {
@@ -249,7 +251,18 @@ const router = createBrowserRouter([
         {
             path:"/admin/dashboard/request-return",
             element: <Request/>
-        }
+        },
+        {
+            path:"/admin/dashboard/book-receipt/view/:id",
+            element: <ViewBookReceipt/>
+        },
+        {
+            path:"/admin/dashboard/book-receipt/edit/:id",
+            element: <EditBookReceipt/>
+        },
+
+
+       
     ]
 }
 ]);

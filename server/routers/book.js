@@ -150,4 +150,16 @@ bookRouter.get("/api/related-books/:bookId", async (req, res) => {
   }
 });
 
+//Lấy sách của tác giả
+bookRouter.get('/books/by-author/:authorId', async (req, res) => {
+  try {
+    const authorId = req.params.authorId;
+    const books = await Book.find({ author: authorId });
+    res.json(books);
+  } catch (error) {
+    console.error('Error fetching books by author:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 module.exports = bookRouter;

@@ -52,106 +52,61 @@ invoiceRouter.get('/invoices/:orderId/pdf', async (req, res) => {
         if (!invoice) {
             return res.status(404).json({ message: 'Invoice not found' });
         }
-
           // HTML content
           const htmlContent = `
-          <section class="bg-gray-100 py-20">
-            <div class="max-w-2xl mx-auto py-0 md:py-16">
-              <article class="shadow-none md:shadow-md md:rounded-md overflow-hidden">
-                <div class="md:rounded-b-md bg-white">
-                  <div class="p-9 border-b border-gray-200">
-                    <div class="space-y-6">
-                      <div class="flex justify-between items-top">
-                        <div class="space-y-4">
-                          <div>
-                            <span class="inline-block">HS Bookstore</span>
-                            <p class="font-bold text-lg">Hóa đơn</p>
-                            <p>HS Bookstore</p>
-                          </div>
-                          <div>
-                            <p class="font-medium text-sm text-gray-400">Hóa đơn cho</p>
-                            <p>Khách hàng: ${invoice.order.name}</p>
-                            <p>Số điện thoại: ${invoice.order.phone}</p>
-                          </div>
-                        </div>
-                        <div class="space-y-2">
-                          <div>
-                            <p class="font-medium text-sm text-gray-400">Mã hóa đơn</p>
-                            <p>${invoice._id}</p>
-                          </div>
-                          <div>
-                            <p class="font-medium text-sm text-gray-400">Ngày tạo</p>
-                            <p>${new Date(invoice.createdAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="p-9 border-b border-gray-200">
-                    <p class="font-medium text-sm text-gray-400">Ghi chú</p>
-                    <p class="text-sm">${invoice.note}</p>
-                  </div>
-                  <table class="w-full divide-y divide-gray-200 text-sm">
-                    <thead>
-                      <tr>
-                        <th scope="col" class="px-9 py-4 text-left font-semibold text-gray-400">Sản phẩm</th>
-                        <th scope="col" class="px-9 py-4 text-left font-semibold text-gray-400">Ảnh</th>
-                        <th scope="col" class="py-3 text-left font-semibold text-gray-400">Giá gốc</th>
-                        <th scope="col" class="py-3 text-left font-semibold text-gray-400">Giảm giá</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                      ${invoice.order.books.map((item, index) => `
-                        <tr key=${index}>
-                          <td class="px-9 py-5 whitespace-nowrap space-x-1 flex items-center">
-                            <div>
-                              <p>${item.book.name}</p>
-                              <p class="text-sm text-gray-400">Số lượng: ${item.quantity}</p>
-                            </div>
-                          </td>
-                          <td class="whitespace-nowrap text-gray-600 truncate">
-                            <img src=${item.book.images} alt=${item.book.name} class="h-16 w-16 object-cover"/>
-                          </td>
-                          <td class="whitespace-nowrap text-gray-600 truncate">${item.book.price.toLocaleString()} VNĐ</td>
-                          <td class="whitespace-nowrap text-gray-600 truncate">${item.book.promotion_price ? item.book.promotion_price.toLocaleString() : '0'} VNĐ</td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                  <div class="p-9 border-b border-gray-200">
-                    <div class="space-y-3">
-                      <div class="flex justify-between">
-                        <div>
-                          <p class="text-gray-500 text-sm">Tổng cộng</p>
-                        </div>
-                        <p class="text-gray-500 text-sm">${invoice.order.totalPrice.toLocaleString()} VNĐ</p>
-                      </div>
-                      <div class="flex justify-between">
-                        <div>
-                          <p class="text-gray-500 text-sm">Thuế</p>
-                        </div>
-                        <p class="text-gray-500 text-sm">0 VNĐ</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="p-9 border-b border-gray-200">
-                    <div class="space-y-3">
-                      <div class="flex justify-between">
-                        <div>
-                          <p class="font-bold text-black text-lg">Thành tiền</p>
-                        </div>
-                        <p class="font-bold text-black text-lg">${invoice.order.totalPrice.toLocaleString()} VNĐ</p>
-                      </div>
-                    </div>
-                  </div>
+        <section style="background-color: #f9f9f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; padding: 10px; background: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <header style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+              <h1 style="font-size: 24px; margin: 0;">HS Bookstore</h1>
+              <h2 style="font-size: 18px; margin: 0;">Hóa đơn</h2>
+              <p>Khách hàng: ${invoice.order.name}</p>
+              <p>Số điện thoại: ${invoice.order.phone}</p>
+              <p>Mã hóa đơn: ${invoice.invoiceCode}</p>
+              <p>Ngày tạo: ${new Date(invoice.createdAt).toLocaleDateString()}</p>
+            </header>
+            <main>
+              <p><strong>Ghi chú:</strong> ${invoice.note}</p>
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 10px;">
+                <thead>
+                  <tr>
+                    <th style="border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Sản phẩm</th>
+                    <th style="border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Ảnh</th>
+                    <th style="border-bottom: 1px solid #ddd; padding: 8px; text-align: right;">Giá gốc</th>
+                    <th style="border-bottom: 1px solid #ddd; padding: 8px; text-align: right;">Giảm giá</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${invoice.order.books.map(item => `
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.book.name} (Số lượng: ${item.quantity})</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd;"><img src="${item.book.images}" style="height: 50px; width: auto;" /></td>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${item.book.price.toLocaleString()} VNĐ</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${item.book.promotion_price ? item.book.promotion_price.toLocaleString() : '0'} VNĐ</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              <div style="margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <p>Tổng cộng:</p>
+                  <p>${invoice.order.totalPrice.toLocaleString()} VNĐ</p>
                 </div>
-              </article>
-            </div>
-          </section>
+                <div style="display: flex; justify-content: space-between;">
+                  <p>Thuế:</p>
+                  <p>0 VNĐ</p>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <p style="font-weight: bold;">Thành tiền:</p>
+                  <p style="font-weight: bold;">${invoice.order.totalPrice.toLocaleString()} VNĐ</p>
+                </div>
+              </div>
+            </main>
+          </div>
+        </section>
         `;
 
         // Options for PDF generation
-        const options = { format: 'A4' };
+        const options = { format: 'A6', margin: [10, 10] };
 
         // Generate PDF
         pdf.create(htmlContent, options).toStream((err, stream) => {
@@ -160,7 +115,7 @@ invoiceRouter.get('/invoices/:orderId/pdf', async (req, res) => {
             }
 
             // Set response headers
-            const fileName = `invoice_${invoice._id}.pdf`;
+            const fileName = `invoice_${invoice.orderCode}.pdf`;
             res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
             res.setHeader('Content-Type', 'application/pdf');
 

@@ -51,7 +51,11 @@ try {
         end_day: {
             type: Date,
             required: true
-        }
+        },
+        books: [{
+             type: mongoose.Schema.Types.ObjectId,
+             ref: 'Book'
+        }],
     });
 
     Promotion = mongoose.model("Promotion", promotionsSchema);

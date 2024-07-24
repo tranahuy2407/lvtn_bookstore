@@ -128,7 +128,7 @@ const Shop = () => {
     }
 
     if (selectedPublishers.length > 0) {
-      publisherCondition = selectedPublishers.includes(book.publisher);
+      publisherCondition = selectedPublishers.includes(book.publishers);
     }
 
     return categoryCondition && publisherCondition;

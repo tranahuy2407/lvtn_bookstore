@@ -20,7 +20,6 @@ const Promotions = () => {
     const fetchPromotions = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/promotions');
-        console.log(response.data);
         if (response.data && response.data.promotions) {
           setPromotions(response.data.promotions);
         } else {
@@ -67,6 +66,16 @@ const Promotions = () => {
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedPromotion(null);
+  };
+
+  const handleUpdatePromotion = (updatedPromotion) => {
+    setPromotions((prevPromotions) =>
+      prevPromotions.map((promo) =>
+        promo._id === updatedPromotion._id ? updatedPromotion : promo
+      )
+    );
+    setIsModalVisible(false);
+    setMessageText('Khuyến mãi đã được cập nhật thành công');
   };
 
   return (
@@ -149,6 +158,7 @@ const Promotions = () => {
           <EditPromotionForm
             promotion={selectedPromotion}
             onClose={handleModalClose}
+            onUpdatePromotion={handleUpdatePromotion}
           />
         )}
       </Modal>

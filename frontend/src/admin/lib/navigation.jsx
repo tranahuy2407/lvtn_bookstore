@@ -188,7 +188,7 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 		]
 	},
 	{
-		key: 'managenew',
+		key: 'managerequest-return',
 		label: 'Quản lý đổi trả',
 		icon: <HiOutlineCube />,
 		children: [

@@ -4,7 +4,7 @@ import { Form, Input, Button, Upload, message, DatePicker, InputNumber } from 'a
 import { UploadOutlined } from '@ant-design/icons';
 import moment from 'moment';
 
-const EditPromotionForm = ({ promotion, onClose }) => {
+const EditPromotionForm = ({ promotion, onClose, onUpdatePromotion }) => {
   const UPLOAD_PRESET = "yznfezyj";
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmcfhbwbb/upload";
 
@@ -13,7 +13,6 @@ const EditPromotionForm = ({ promotion, onClose }) => {
   const [imageName, setImageName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [messageInfo, setMessageInfo] = useState('');
 
   useEffect(() => {
     setUpdatedPromotion(promotion);
@@ -25,42 +24,89 @@ const EditPromotionForm = ({ promotion, onClose }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUpdatedPromotion({ ...updatedPromotion, [name]: value });
+    setUpdatedPromotion(prev => ({ ...prev, [name]: value }));
   };
 
   const handleValueChange = (name, value) => {
-    setUpdatedPromotion({ ...updatedPromotion, [name]: value });
+    setUpdatedPromotion(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = async (file) => {
+  const handleUploadImage = async (file) => {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-    formData.append('folder', 'Khuyến mãi');
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("folder", "Khuyến mãi");
+
     try {
-      const response = await axios.post(CLOUDINARY_URL, formData);
-      const imageUrl = response.data.secure_url;
-      setUpdatedPromotion({ ...updatedPromotion, image: imageUrl });
-      setImageName(file.name);
-      setImageUrl(imageUrl);
-      message.success('Tải lên hình ảnh thành công!');
+      const response = await axios.post(CLOUDINARY_URL, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: false
+      });
+
+      if (response.status === 200) {
+        return response.data.secure_url;
+      } else {
+        throw new Error("Failed to upload image");
+      }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      message.error('Tải lên hình ảnh thất bại.');
+      console.error("Error uploading image:", error);
+      message.error(`Tải lên hình ảnh thất bại: ${error.message}`);
+      return null;
     }
   };
 
   const handleUpdatePromotion = async () => {
     setUploading(true);
+    
     try {
-      await axios.put(`http://localhost:5000/api/updatepromotion/${updatedPromotion._id}`, updatedPromotion);
+      let uploadedImageUrl = imageUrl;
+
+      if (imageFile) {
+        uploadedImageUrl = await handleUploadImage(imageFile);
+        if (!uploadedImageUrl) {
+          setUploading(false);
+          return;
+        }
+      }
+
+      const response = await axios.put(`http://localhost:5000/api/updatepromotion/${updatedPromotion._id}`, {
+        ...updatedPromotion,
+        image: uploadedImageUrl || null,
+      });
+
       message.success('Cập nhật khuyến mãi thành công!');
+      onUpdatePromotion(response.data);
       onClose();
     } catch (error) {
       console.error('Error updating promotion:', error);
       message.error('Cập nhật khuyến mãi thất bại.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleImageChange = (info) => {
+    const { file } = info;
+    if (file.status === 'done') {
+      setImageFile(file.originFileObj);
+      setImageName(file.name);
+      setImageUrl(URL.createObjectURL(file.originFileObj));
+    } else if (file.status === 'error') {
+      setImageFile(null);
+      setImageName('');
+      setImageUrl('');
+    }
+  };
+
+  const handleEndDateChange = (date, dateString) => {
+    const startDate = updatedPromotion.start_day;
+    if (dateString && startDate && dateString < startDate) {
+      message.error('Ngày kết thúc phải chọn sau ngày bắt đầu');
+      setUpdatedPromotion(prev => ({ ...prev, end_day: null }));
+    } else {
+      setUpdatedPromotion(prev => ({ ...prev, end_day: date ? date.toISOString() : null }));
     }
   };
 
@@ -92,35 +138,27 @@ const EditPromotionForm = ({ promotion, onClose }) => {
               onChange={(date) => handleValueChange('start_day', date ? date.toISOString() : null)}
               style={{ width: '100%' }}
               format="YYYY-MM-DD"
+              disabledDate={(current) => current && current < moment().startOf('day')}
             />
           </Form.Item>
           <Form.Item label="Ngày kết thúc" className="flex-1">
             <DatePicker
               value={updatedPromotion.end_day ? moment(updatedPromotion.end_day) : null}
-              onChange={(date) => handleValueChange('end_day', date ? date.toISOString() : null)}
+              onChange={handleEndDateChange}
               style={{ width: '100%' }}
               format="YYYY-MM-DD"
+              disabledDate={(current) => current && current <= moment(updatedPromotion.start_day)}
             />
           </Form.Item>
         </div>
         <Form.Item label="Hình ảnh">
           <Upload
             beforeUpload={(file) => {
-              handleImageUpload(file);
-              return false; // Prevent automatic upload
+              setImageFile(file);
+              setImageName(file.name);
+              return false; 
             }}
-            onChange={(info) => {
-              const { file } = info;
-              if (file.status === 'done') {
-                setImageFile(file.originFileObj);
-                setImageName(file.name);
-                setImageUrl(URL.createObjectURL(file.originFileObj));
-              } else if (file.status === 'error') {
-                setImageFile(null);
-                setImageName('');
-                setImageUrl('');
-              }
-            }}
+            onChange={handleImageChange}
             maxCount={1}
             showUploadList={false}
           >
@@ -141,7 +179,6 @@ const EditPromotionForm = ({ promotion, onClose }) => {
             Hủy
           </Button>
         </Form.Item>
-        {messageInfo && <p className='mt-3 text-green-500'>{messageInfo}</p>}
       </Form>
     </div>
   );

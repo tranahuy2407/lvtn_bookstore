@@ -29,7 +29,7 @@ const AddPromotion = () => {
         formData.append('upload_preset', UPLOAD_PRESET);
         formData.append('folder', 'Khuyến mãi');
 
-        const response = await axios.post(CLOUDINARY_URL, formData, {
+        const response = await axios.post(CLOUDINARY_URL, formData, { 
           headers: {
             'Content-Type': 'multipart/form-data',
           },
