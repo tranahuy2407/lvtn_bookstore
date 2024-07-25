@@ -14,6 +14,7 @@ const orderRouter = require("./routers/order");
 const invoiceRouter = require("./routers/invoice");
 const bookReceiptRouter = require("./routers/bookreceipt");
 const newRouter = require("./routers/new");
+const commentRouter = require("./routers/comment");
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -40,6 +41,7 @@ app.use(orderRouter);
 app.use(invoiceRouter);
 app.use(bookReceiptRouter);
 app.use(newRouter);
+app.use(commentRouter);
 
 mongoose
   .connect(DB)
