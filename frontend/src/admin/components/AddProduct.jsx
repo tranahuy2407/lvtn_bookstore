@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Checkbox, Select, InputNumber, Form, Input, Button, Upload, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Upload, Button, InputNumber, Input, Select, message, Modal } from 'antd';
+import { UploadOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 
-export default function AddProduct() {
+const AddProduct = () => {
   const UPLOAD_PRESET = "yznfezyj";
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmcfhbwbb/upload";
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState({
     name: '',
     description: '',
     images: '',
+    quantity: 0,
     price: '',
     promotion_percent: 0,
     promotion_price: 0,
@@ -21,52 +24,39 @@ export default function AddProduct() {
     publishers: '',
   });
 
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
   const [categories, setCategories] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [publishers, setPublishers] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [imageName, setImageName] = useState('');
+  const [messageInfo, setMessageInfo] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/categories');
-        setCategories(response.data);
+        const [categoriesRes, authorsRes, publishersRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/categories'),
+          axios.get('http://localhost:5000/api/authors'),
+          axios.get('http://localhost:5000/api/publishers'),
+        ]);
+        setCategories(categoriesRes.data);
+        setAuthors(authorsRes.data);
+        setPublishers(publishersRes.data);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    const fetchAuthors = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/authors');
-        setAuthors(response.data);
-      } catch (error) {
-        console.error('Error fetching authors:', error);
-      }
-    };
-
-    const fetchPublishers = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/publishers');
-        setPublishers(response.data);
-      } catch (error) {
-        console.error('Error fetching publishers:', error);
-      }
-    };
-
-    fetchCategories();
-    fetchAuthors();
-    fetchPublishers();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
-    if (e.target.name === 'categories') {
-      setProduct({ ...product, categories: e });
+    const { name, value } = e.target;
+    if (name === 'categories') {
+      setProduct({ ...product, categories: value });
     } else {
-      setProduct({ ...product, [e.target.name]: e.target.value });
+      setProduct({ ...product, [name]: value });
     }
   };
 
@@ -92,46 +82,70 @@ export default function AddProduct() {
     });
   };
 
-  const handleUploadImage = async ({ file }) => {
-    if (!file.type.startsWith("image/")) {
-      setErrorMessage("Bạn chỉ có thể tải lên hình ảnh!");
-      return false;
+  const handleUploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', `Sách/${product.name}`);
+
+    try {
+      const response = await axios.post(CLOUDINARY_URL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: false,
+      });
+
+      if (response.status === 200) {
+        return response.data.secure_url;
+      } else {
+        throw new Error('Failed to upload image');
+      }
+    } catch (error) {
+      message.error(`Image upload failed: ${error.message}`);
+      console.error('Error uploading image:', error);
+      return null;
     }
-    setImageFile(file);
-    setImageName(file.name);
-    return false; // Prevent auto upload by Ant Design
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    setUploading(true);
+  
+    if (!product.name || !product.price || !product.categories.length || !product.author || !product.publishers) {
+      message.error('Please fill in all required fields.');
+      setUploading(false);
+      return;
+    }
+  
     try {
       let imageUrl = product.images;
+  
       if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', UPLOAD_PRESET);
-
-        const response = await axios.post(CLOUDINARY_URL, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        imageUrl = response.data.secure_url;
+        imageUrl = await handleUploadImage(imageFile);
+        if (!imageUrl) {
+          setUploading(false);
+          return;
+        }
       }
-
-      const newProduct = { ...product, images: imageUrl };
-      const response = await axios.post('http://localhost:5000/admin/add-product', newProduct, {
+  
+      await axios.post('http://localhost:5000/admin/add-product', {
+        ...product,
+        images: imageUrl,
+        price: Number(product.price),
+        quantity: Number(product.quantity),
+        promotion_price: Number(product.promotion_price),
+      }, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      setSuccessMessage('Sản phẩm đã được thêm thành công!');
-      setErrorMessage('');
+  
+      setMessageInfo('Product added successfully!');
       setProduct({
         name: '',
         description: '',
         images: '',
+        quantity: 0,
         price: '',
         promotion_percent: 0,
         promotion_price: 0,
@@ -141,26 +155,37 @@ export default function AddProduct() {
       });
       setImageFile(null);
       setImageName('');
+      setTimeout(() => navigate('/admin/dashboard/products'), 1500);
     } catch (error) {
-      setErrorMessage('Đã xảy ra lỗi khi thêm sản phẩm. Vui lòng thử lại.');
-      setSuccessMessage('');
-      console.error('Error adding product:', error);
+      setMessageInfo('Error adding product. Please try again.');
+      console.error('Error adding product:', error.response ? error.response.data : error.message);
+    } finally {
+      setUploading(false);
     }
+  };
+
+  const handleCancel = () => {
+    Modal.confirm({
+      title: 'Bạn có chắc chắn muốn hủy bỏ?',
+      content: 'Những thay đổi của bạn sẽ không được lưu.',
+      okText: 'Có',
+      cancelText: 'Không',
+      onOk: () => navigate('/admin/dashboard/products'),
+    });
   };
 
   return (
     <div className='max-w-4xl mx-auto bg-white px-8 pt-6 pb-8 rounded-md shadow-md'>
-      <strong className='text-gray-700 text-xl font-medium block mb-4'>Thêm sản phẩm mới</strong>
-      <form onSubmit={handleSubmit} className='space-y-4 overflow-y-auto' style={{ maxHeight: '500px' }}>
+      <strong className='text-gray-700 text-xl font-medium block mb-4'>Thêm Sản Phẩm Mới</strong>
+      <div className='space-y-4 overflow-y-auto' style={{ maxHeight: '700px' }}>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           <div>
-            <label className='block text-gray-700'>Tên sản phẩm</label>
-            <input
-              type='text'
+            <label className='block text-gray-700'>Tên Sản Phẩm</label>
+            <Input
               name='name'
               value={product.name}
               onChange={handleChange}
-              className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50'
+              className='mt-1 block w-full'
               required
             />
           </div>
@@ -175,7 +200,7 @@ export default function AddProduct() {
             />
           </div>
           <div>
-            <label className='block text-gray-700'>Phần trăm giảm giá</label>
+            <label className='block text-gray-700'>Phần Trăm Giảm Giá</label>
             <InputNumber
               name='promotion_percent'
               value={product.promotion_percent}
@@ -186,7 +211,7 @@ export default function AddProduct() {
             />
           </div>
           <div>
-            <label className='block text-gray-700'>Giá sau khi giảm</label>
+            <label className='block text-gray-700'>Giá Sau Giảm Giá</label>
             <InputNumber
               name='promotion_price'
               value={product.promotion_price}
@@ -195,40 +220,59 @@ export default function AddProduct() {
             />
           </div>
           <div>
-            <label className='block text-gray-700'>Hình ảnh</label>
+            <label className='block text-gray-700'>Hình Ảnh</label>
             <Upload
-              name='images'
-              listType='picture'
-              className='mt-1 block w-full'
+              beforeUpload={(file) => {
+                setImageFile(file);
+                setImageName(file.name);
+                return false; // Prevent automatic upload
+              }}
               showUploadList={false}
-              beforeUpload={handleUploadImage}
             >
-              <Button icon={<UploadOutlined />}>Tải lên hình ảnh</Button>
+              <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
             </Upload>
             {imageName && <span style={{ marginLeft: 8 }}>{imageName}</span>}
           </div>
           <div>
-            <label className='block text-gray-700'>Thể loại</label>
-            <Checkbox.Group
-              options={categories.map(category => ({
-                label: category.name,
-                value: category._id,
-              }))}
-              name='categories'
-              value={product.categories}
-              onChange={(values) => handleSelectChange(values, 'categories')}
+            <label className='block text-gray-700'>Số Lượng</label>
+            <InputNumber
+              name='quantity'
+              value={product.quantity}
+              onChange={(value) => setProduct({ ...product, quantity: value })}
               className='mt-1 block w-full'
-              required
             />
           </div>
           <div>
-            <label className='block text-gray-700'>Tác giả</label>
+            <label className='block text-gray-700'>Mô Tả</label>
+            <Input.TextArea
+              name='description'
+              value={product.description}
+              onChange={handleChange}
+              rows={4}
+              className='mt-1 block w-full'
+            />
+          </div>
+          <div>
+            <label className='block text-gray-700'>Danh Mục</label>
+            <Select
+              mode='multiple'
+              name='categories'
+              value={product.categories}
+              onChange={(value) => handleSelectChange(value, 'categories')}
+              className='mt-1 block w-full'
+            >
+              {categories.map(category => (
+                <Option key={category._id} value={category._id}>{category.name}</Option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label className='block text-gray-700'>Tác Giả</label>
             <Select
               name='author'
               value={product.author}
               onChange={(value) => handleSelectChange(value, 'author')}
               className='mt-1 block w-full'
-              required
             >
               {authors.map(author => (
                 <Option key={author._id} value={author._id}>{author.name}</Option>
@@ -236,13 +280,12 @@ export default function AddProduct() {
             </Select>
           </div>
           <div>
-            <label className='block text-gray-700'>Nhà xuất bản</label>
+            <label className='block text-gray-700'>Nhà Xuất Bản</label>
             <Select
               name='publishers'
               value={product.publishers}
               onChange={(value) => handleSelectChange(value, 'publishers')}
               className='mt-1 block w-full'
-              required
             >
               {publishers.map(publisher => (
                 <Option key={publisher._id} value={publisher._id}>{publisher.name}</Option>
@@ -250,24 +293,30 @@ export default function AddProduct() {
             </Select>
           </div>
         </div>
-        <div>
-          <label className='block text-gray-700'>Mô tả</label>
-          <textarea
-            name='description'
-            value={product.description}
-            onChange={handleChange}
-            className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50'
-            required
-          />
-        </div>
-        <div>
-          <Button type='primary' htmlType='submit'>
-            Thêm sản phẩm
-          </Button>
-        </div>
-      </form>
-      {successMessage && <p className='text-green-500'>{successMessage}</p>}
-      {errorMessage && <p className='text-red-500'>{errorMessage}</p>}
+      </div>
+      <div className='flex justify-end mt-6'>
+        <Button
+          type='default'
+          onClick={handleCancel}
+          className='flex items-center justify-center'
+          style={{ marginRight: '8px' }}
+        >
+          <CloseOutlined />
+        </Button>
+        <Button
+          type='primary'
+          onClick={handleSubmit}
+          className='flex items-center justify-center'
+          icon={<SaveOutlined />}
+          loading={uploading}
+        >
+          Lưu
+        </Button>
+      </div>
+      {messageInfo && <p className='mt-4 text-center text-red-600'>{messageInfo}</p>}
     </div>
   );
-}
+};
+
+export default AddProduct;
+  

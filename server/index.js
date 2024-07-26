@@ -18,7 +18,7 @@ const commentRouter = require("./routers/comment");
 
 const PORT = process.env.PORT || 5000;
 const app = express();
-const DB = "mongodb://127.0.0.1:27017/lvtn";
+const DB = "mongodb+srv://tranahuy247:apyxYvfI9kkBDlhN@cluster0.4kwvuyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 const cors = require('cors');
 const corsOptions ={

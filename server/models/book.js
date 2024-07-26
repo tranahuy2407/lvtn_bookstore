@@ -19,7 +19,8 @@ const booksSchema = mongoose.Schema({
   },
   quantity: {
     type: Number,
-    required: false,
+    default: 0,
+    min: 0
   },
   promotion_percent: {
     type: Number,
