@@ -5,14 +5,7 @@ const commentSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  rating: {
-    type: Number,
-    default: 5,
-  },
-  comment: {
-    type: String,
-    default: "",
-  },
+  comments: [String], 
   status: {
     type: Number,
     default: 0,

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const commentSchema = require("./comment");
+const ratingSchema = require("./rating");
 
 const booksSchema = mongoose.Schema({
   name: {
@@ -48,6 +49,7 @@ const booksSchema = mongoose.Schema({
     ref: 'Publisher'
   },
   comments: [commentSchema],
+  ratings: [ratingSchema],
 });
 
 const Book = mongoose.model("Book", booksSchema);

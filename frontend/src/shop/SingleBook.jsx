@@ -28,8 +28,9 @@ const SingleBook = () => {
         setRelatedBooks(relatedResponse.data);
         const ratingResponse = await axios.get(`http://localhost:5000/api/average-rating/${_id}`);
         setAverageRating(ratingResponse.data.averageRating);
-        const commentsResponse = await axios.get(`http://localhost:5000/${_id}/comments`);
-        setCommentsCount(commentsResponse.data.length);
+        const ratingCountResponse = await axios.get(`http://localhost:5000/api/book/${_id}/rating-count`);
+        setCommentsCount(ratingCountResponse.data.userRatingsCount);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
       }
