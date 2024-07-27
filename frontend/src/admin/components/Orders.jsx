@@ -20,7 +20,6 @@ const Orders = () => {
       const ordersWithUserName = await Promise.all(
         response.data.map(async (order) => {
           const userName = await fetchUserName(order.userId);
-          console.log("User name:", userName);
           return { ...order, name: userName };
         })
       );
@@ -46,13 +45,14 @@ const Orders = () => {
   };
 
   // lấy chi tiết đơn hàng dựa trên id
-  const fetchProductName = async (orderId) => {
+  const fetchProduct = async (orderId) => {
     try {
       const response = await axios.get(
         `http://localhost:5000/api/orders/${orderId}`
       );
-      console.log("Product details response:", response.data);
-      return response.data.products;
+      return response.data;
+      
+
     } catch (error) {
       console.error("Error fetching product list:", error);
       return [];
@@ -81,7 +81,28 @@ const Orders = () => {
         return;
       }
   
-      const productsDetails = await fetchProductName(record._id);
+      const response = await fetchProduct(record._id);
+  
+      // Check if response contains the expected properties
+      if (!response || !Array.isArray(response.books)) {
+        console.error("Expected response.books to be an array, but received:", response);
+        Modal.info({
+          title: "Chi tiết đơn hàng",
+          content: (
+            <div>
+              <p>
+                <strong>Tên khách hàng:</strong> {record.name}
+              </p>
+              <p>
+                <strong>Phương thức thanh toán:</strong> {record.paymentMethod}
+              </p>
+              <p>Không tìm thấy sản phẩm nào.</p>
+            </div>
+          ),
+          onOk() {},
+        });
+        return;
+      }
   
       Modal.info({
         title: "Chi tiết đơn hàng",
@@ -93,22 +114,37 @@ const Orders = () => {
             <p>
               <strong>Phương thức thanh toán:</strong> {record.paymentMethod}
             </p>
-            {productsDetails && productsDetails.length > 0 ? (
-              <div>
-                <p>
-                  <strong>Sản phẩm:</strong>
-                </p>
-                <ul>
-                  {productsDetails.map((productDetail, index) => (
-                    <li key={index}>
-                      {productDetail.productName} x {productDetail.quantity}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p>Không tìm thấy sản phẩm nào.</p>
-            )}
+            <p>
+              <strong>Địa chỉ:</strong> {record.address}
+            </p>
+            <p>
+              <strong>Ghi chú:</strong> {record.note}
+            </p>
+            <p>
+              <strong>Thời gian đặt:</strong> {new Date(record.orderedAt).toLocaleString()}
+            </p>
+            <p>
+              <strong>Trạng thái:</strong> {statusToText(record.status)}
+            </p>
+            <p>
+              <strong>Sản phẩm:</strong>
+            </p>
+            <ul>
+              {response.books.length > 0 ? (
+                response.books.map((productDetail, index) => (
+                  <li key={index}>
+                    <img 
+                      src={productDetail.book.images || 'default-image-url'} 
+                      alt={productDetail.book.name || 'Tên sản phẩm không có'} 
+                      style={{ width: '50px', height: '50px', objectFit: 'contain', marginRight: '8px' }} 
+                    />
+                    {productDetail.book.name || 'Tên sản phẩm không có'} x {productDetail.quantity || 0} = {productDetail.book.promotion_price || 0} VND
+                  </li>
+                ))
+              ) : (
+                <p>Không tìm thấy sản phẩm nào.</p>
+              )}
+            </ul>
           </div>
         ),
         onOk() {},
@@ -121,7 +157,20 @@ const Orders = () => {
       });
     }
   };
+  
 
+  const statusToText = (status) => {
+    switch (status) {
+      case -1: return "Đã hủy";
+      case 0: return "Chưa giải quyết";
+      case 1: return "Đã nhận";
+      case 2: return "Đang giao hàng";
+      case 3: return "Đã giao";
+      case 4: return "Đang tiến hành thanh toán";
+      default: return "Trạng thái không xác định";
+    }
+  };
+  
   const columns = [
     {
       key: "orderCode",

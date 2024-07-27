@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('authToken') || '');
-  const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -17,8 +17,8 @@ export const AuthProvider = ({ children }) => {
               'Authorization': `Bearer ${token}`,
             },
           });
-          setUser(response.data);
-          localStorage.setItem('user', JSON.stringify(response.data));
+          setAdmin(response.data);
+          localStorage.setItem('admin', JSON.stringify(response.data));
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
         }
@@ -39,9 +39,9 @@ export const AuthProvider = ({ children }) => {
     try {
       await axios.post('http://localhost:5000/admin/logout');
       setToken('');
-      setUser(null);
+      setAdmin(null);
       localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      localStorage.removeItem('admin');
     } catch (error) {
       console.error('Failed to logout:', error);
     }
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
           },
         });
         setUser(response.data);
-        localStorage.setItem('user', JSON.stringify(response.data));
+        localStorage.setItem('admin', JSON.stringify(response.data));
       } catch (error) {
         console.error('Failed to fetch user profile:', error);
       }
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, ready }}>
+    <AuthContext.Provider value={{ token, admin, login, logout, ready }}>
       {children}
     </AuthContext.Provider>
   );

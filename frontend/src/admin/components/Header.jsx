@@ -8,7 +8,7 @@ import { useAuth } from '../authencation/AuthContext';
 function Header() {
 
   const navigate = useNavigate();
-  const { user, logout, ready } = useAuth();
+  const { admin, logout, ready } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -21,9 +21,9 @@ function Header() {
       <div className='flex items-center gap-2 mr-2'>
         <Menu as="div" className="relative">
           <MenuButton className="inline-flex items-center gap-2 rounded-md bg-gray-800 py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-gray-700 data-[open]:bg-gray-700 data-[focus]:outline-1 data-[focus]:outline-white">
-          {!!user && (
+          {!!admin && (
               <div>
-                {user.name}
+                {admin.name}
               </div>
             )}
             <ChevronDownIcon className="size-4 fill-white/60" />

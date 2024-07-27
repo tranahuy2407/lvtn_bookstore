@@ -106,7 +106,6 @@ function EditProductForm({ product, onClose }) {
   };
 
   const handleUpdateProduct = async () => {
-    console.log('Updating product with ID:', updatedProduct._id);
     setUploading(true); 
     try {
       await axios.put(`http://localhost:5000/admin/update-product/${updatedProduct._id}`, {
