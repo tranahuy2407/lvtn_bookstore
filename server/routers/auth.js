@@ -39,7 +39,6 @@ authRouter.post("/api/signin", async (req, res) => {
     if (!user) {
       return res.status(400).json({ msg: "Email này không tồn tại!" });
     }
-
     const isMatch = await bcryptjs.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ msg: "Mật khẩu không đúng!" });
@@ -80,16 +79,16 @@ authRouter.post("/tokenIsValid", async (req, res) => {
 
 //Lấy thông tin profile
 authRouter.get("/api/profile", (req, res) => {
-    const {token} = req.cookies;
-    if(token){
-        jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-          if(err) throw err;
-           const {email, name, phone, _id} = await User.findById(userData.id);
-            res.json(email, name, phone, _id);
-        });
-    }else{
-      res.json(null);
-    } 
+  const {token} = req.cookies;
+  if(token){
+      jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+        if(err) throw err;
+         const {email, name, phone, _id} = await User.findById(userData.id);
+          res.json(email, name, phone, _id);
+      });
+  }else{
+    res.json(null);
+  } 
 });
 
 // Đăng xuất

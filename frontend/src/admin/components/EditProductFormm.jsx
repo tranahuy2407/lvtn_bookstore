@@ -16,6 +16,7 @@ function EditProductForm({ product, onClose }) {
   const [imageFile, setImageFile] = useState(null);
   const [imageName, setImageName] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState(product.promotion_percent || 0);
+  const [uploading, setUploading] = useState(false); 
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -90,6 +91,7 @@ function EditProductForm({ product, onClose }) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', `Sách/${product.name}`);
 
     try {
       const response = await axios.post(CLOUDINARY_URL, formData);
@@ -104,16 +106,24 @@ function EditProductForm({ product, onClose }) {
   };
 
   const handleUpdateProduct = async () => {
+    console.log('Updating product with ID:', updatedProduct._id);
+    setUploading(true); 
     try {
-      await axios.put(`http://localhost:5000/api/products/${updatedProduct._id}`, updatedProduct);
+      await axios.put(`http://localhost:5000/admin/update-product/${updatedProduct._id}`, {
+        ...updatedProduct,
+        promotion_percent: discountPercentage,
+        images: updatedProduct.images || null,
+      });
       message.success('Cập nhật sản phẩm thành công!');
       onClose();
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error('Error updating product:', error.response || error.message);
       message.error('Cập nhật sản phẩm thất bại.');
+    } finally {
+      setUploading(false);
     }
   };
-
+  
   return (
     <div className="bg-white p-4 rounded-md shadow-lg">
       <h2 className="text-lg font-medium mb-4">Chỉnh sửa sản phẩm</h2>
@@ -132,7 +142,7 @@ function EditProductForm({ product, onClose }) {
             <InputNumber
               min={0}
               max={100}
-              value={discountPercentage}
+              value={updatedProduct.promotion_percent}
               onChange={handleDiscountPercentageChange}
               formatter={(value) => `${value}%`}
               parser={(value) => value.replace('%', '')}
@@ -198,7 +208,7 @@ function EditProductForm({ product, onClose }) {
           {updatedProduct.images && <img src={updatedProduct.images} alt="Product" className="mt-2 w-32 h-32 object-contain" />}
         </Form.Item>
         <Form.Item>
-          <Button type="primary" onClick={handleUpdateProduct}>
+          <Button type="primary" onClick={handleUpdateProduct} loading={uploading}>
             Lưu thay đổi
           </Button>
           <Button type="default" onClick={onClose} className="ml-2">

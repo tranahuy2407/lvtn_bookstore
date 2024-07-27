@@ -10,7 +10,6 @@ function Products() {
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showColumnsForm, setShowColumnsForm] = useState(false);
-
   const [columnsVisible, setColumnsVisible] = useState({
     id: true,
     name: true,
@@ -24,6 +23,10 @@ function Products() {
     quantity: true,
     actions: true,
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(7);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -51,13 +54,14 @@ function Products() {
         }));
 
         setProducts(productsWithDetails);
+        setTotalPages(Math.ceil(productsWithDetails.length / productsPerPage));
       } catch (error) {
         console.error('Error fetching products:', error);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [productsPerPage]);
 
   const handleDeleteProduct = (productId) => {
     Modal.confirm({
@@ -69,6 +73,10 @@ function Products() {
         try {
           await axios.post('http://localhost:5000/admin/delete-product', { id: productId });
           setProducts(products.filter(product => product._id !== productId));
+          setTotalPages(Math.ceil((products.length - 1) / productsPerPage));
+          if (currentPage > Math.ceil((products.length - 1) / productsPerPage)) {
+            setCurrentPage(currentPage - 1);
+          }
           message.success('Xóa sản phẩm thành công.');
         } catch (error) {
           console.error('Lỗi khi xóa sản phẩm:', error);
@@ -77,7 +85,6 @@ function Products() {
       },
     });
   };
-  
 
   const openEditForm = (product) => {
     setSelectedProduct(product);
@@ -95,10 +102,26 @@ function Products() {
     });
   };
 
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
       <strong className='text-gray-700 font-medium'>Danh sách sản phẩm</strong>
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end items-center relative">
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-600">Cột hiển thị:</span>
           <FontAwesomeIcon
@@ -107,22 +130,22 @@ function Products() {
             onClick={() => setShowColumnsForm(!showColumnsForm)}
           />
         </div>
+        {showColumnsForm && (
+          <div className="absolute top-full right-0 mt-2 flex flex-col items-start space-y-2 border rounded p-2 bg-white shadow-lg">
+            {Object.keys(columnsVisible).map(column => (
+              <label key={column} className="flex items-center space-x-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={columnsVisible[column]}
+                  onChange={() => toggleColumnVisibility(column)}
+                  className="form-checkbox h-4 w-4 text-green-500"
+                />
+                <span className="text-gray-700 text-sm">{column}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
-      {showColumnsForm && (
-        <div className="mt-2 flex flex-col items-start space-y-2 border rounded p-2 absolute bg-white shadow-lg">
-          {Object.keys(columnsVisible).map(column => (
-            <label key={column} className="flex items-center space-x-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={columnsVisible[column]}
-                onChange={() => toggleColumnVisibility(column)}
-                className="form-checkbox h-4 w-4 text-green-500"
-              />
-              <span className="text-gray-700 text-sm">{column}</span>
-            </label>
-          ))}
-        </div>
-      )}
       <div className='mt-3'>
         <table className='w-full text-gray-700'>
           <thead>
@@ -141,9 +164,9 @@ function Products() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product, index) => (
+            {currentProducts.map((product, index) => (
               <tr key={product._id}>
-                {columnsVisible.id && <td>{index + 1}</td>}
+                {columnsVisible.id && <td>{indexOfFirstProduct + index + 1}</td>}
                 {columnsVisible.name && <td>{product.name}</td>}
                 {columnsVisible.image && (
                   <td>
@@ -174,6 +197,25 @@ function Products() {
             ))}
           </tbody>
         </table>
+        <div className="mt-3 flex justify-between items-center">
+          <button
+            onClick={handlePreviousPage}
+            className={`mx-1 px-3 py-1 rounded focus:outline-none ${currentPage === 1 ? 'bg-gray-200 text-gray-700' : 'bg-blue-500 text-white'}`}
+            disabled={currentPage === 1}
+          >
+            Trang trước
+          </button>
+          <div className="text-gray-600">
+            Trang {currentPage} / {totalPages}
+          </div>
+          <button
+            onClick={handleNextPage}
+            className={`mx-1 px-3 py-1 rounded focus:outline-none ${currentPage === totalPages ? 'bg-gray-200 text-gray-700' : 'bg-blue-500 text-white'}`}
+            disabled={currentPage === totalPages}
+          >
+            Trang tiếp
+          </button>
+        </div>
       </div>
 
       {editFormVisible && selectedProduct && (
@@ -182,8 +224,8 @@ function Products() {
           onCancel={() => setEditFormVisible(false)}
           footer={null}
           title="Chỉnh sửa sản phẩm"
-          width={1000} // Điều chỉnh kích thước rộng của Modal
-          style={{ top: 20 }} // Điều chỉnh khoảng cách từ đỉnh của Modal đến đầu trang
+          width={1000}
+          style={{ top: 20 }}
         >
           <EditProductForm product={selectedProduct} onClose={() => setEditFormVisible(false)} />
         </Modal>

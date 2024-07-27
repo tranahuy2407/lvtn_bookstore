@@ -7,8 +7,6 @@ const DashBoardLayout = () => {
     <div className='flex flex-row bg-neutral-100 h-screen w-screen overflow-y-auto'>
       
       <Sidebar />
-      {/* <Products /> */}
-      
       <div className='flex-1'>
         <Header />
 

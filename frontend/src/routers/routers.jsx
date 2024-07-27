@@ -1,5 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import App from "../App"
+import App from "../App";
 import Home from "../home/Home";
 import Shop from "../shop/Shop";
 import About from "../components/About";
@@ -48,223 +48,77 @@ import UpdateNews from "../admin/news/UpdateNews";
 import Request from "../admin/customer-service/Request";
 import ViewBookReceipt from "../admin/bookreceipt/ViewBookReceipt";
 import EditBookReceipt from "../admin/bookreceipt/EditBookReceipt";
+import LoginAdmin from '../admin/authencation/LoginAdmin'; 
+import ProtectedRoute from '../admin/authencation/ProtectedRoute'; 
 
 const router = createBrowserRouter([
+  // User routes
   {
     path: "/",
-    element: <App/>,
-    children:[
-        {
-            path: "/",
-            element: <Home  />
-        },
-        {
-            path: "/all-shop",
-            element: <Shop/>,
-        },
-        {
-            path: "/shop/:id",
-            element: <ShopByCategory/>,
-        },
-        {
-            path: "/shop/promotion/:id",
-            element: <ShopByPromotion/>,
-        },
-        
-        {
-            path: "/about",
-            element: <About/>
-        },
-        {
-            path: "/news",
-            element: <News/>
-        },
-        {
-            path: "/signup",
-            element: <SignUpPage/>
-        },
-        {
-            path: "/login",
-            element: <LoginPage/>
-        },
-        {
-            path: "/account",
-            element: <AccountPage/>
-        },
-        {
-            path: "/account/:subpage?",
-            element: <AccountPage/>
-        },
-        {
-            path:"/book/:id",
-            element: <SingleBook/>,
-            loader: ({params})=>fetch(`http://localhost:5000/api/products/${params.id}`)
-        },
-     
-        {
-            path:"/account/:subpage/:action",
-            element: <Favourites/>
-        },
-        {
-            path:"/account/:subpage/:action",
-            element: <OrderMe/>
-        },
-        {
-            path:"/account/:subpage/:action",
-            element: <OrderHistory/>
-        },
-        {
-            path: "/account/myorders/:orderId",
-            element: <OrderDetail/>,
-            loader: ({params})=>fetch(`http://localhost:5000/order/${params.id}`)
-        },
-        {
-            path:"/cart",
-            element: <Cart/>
-        },
-        {
-            path:"/checkout",
-            element: <Checkout/>
-        },
-        {
-            path:"/invoice/:orderId",
-            element: <Invoice/>
-        },
-        {
-            path:"/order-success",
-            element: <OrderSuccess/>
-        },
-        {
-            path:"/search",
-            element: <Search/>
-        },
-        {
-            path:"/ratings/:orderId",
-            element: <Rating/>
-        },
-      
+    element: <App />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/all-shop", element: <Shop /> },
+      { path: "/shop/:id", element: <ShopByCategory /> },
+      { path: "/shop/promotion/:id", element: <ShopByPromotion /> },
+      { path: "/about", element: <About /> },
+      { path: "/news", element: <News /> },
+      { path: "/signup", element: <SignUpPage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/account", element: <AccountPage /> },
+      { path: "/account/:subpage?", element: <AccountPage /> },
+      { path: "/book/:id", element: <SingleBook />, loader: ({ params }) => fetch(`http://localhost:5000/api/products/${params.id}`) },
+      { path: "/account/:subpage/:action", element: <Favourites /> },
+      { path: "/account/:subpage/:action", element: <OrderMe /> },
+      { path: "/account/:subpage/:action", element: <OrderHistory /> },
+      { path: "/account/myorders/:orderId", element: <OrderDetail />, loader: ({ params }) => fetch(`http://localhost:5000/order/${params.orderId}`) },
+      { path: "/cart", element: <Cart /> },
+      { path: "/checkout", element: <Checkout /> },
+      { path: "/invoice/:orderId", element: <Invoice /> },
+      { path: "/order-success", element: <OrderSuccess /> },
+      { path: "/search", element: <Search /> },
+      { path: "/ratings/:orderId", element: <Rating /> },
     ]
   },
+  
+  // Admin routes
   {
-    path:"/admin/dashboard",
-    element: <DashBoardLayout/>,
+    path: "/admin/login",
+    element: <LoginAdmin />,
+  },
+  {
+    path: "/admin/dashboard",
+    element: <ProtectedRoute element={<DashBoardLayout />} />,
     children: [
-        {
-            path:"/admin/dashboard",
-            element: <DashBoard/>
-        },
-
-        {
-            path:"/admin/dashboard/products",
-            element: <Products/>
-        },
-
-        {
-            path: "/admin/dashboard/add-product",
-            element: <AddProduct /> 
-        },
-        {
-            path:"/admin/dashboard/publishers",
-            element: <Publishers />
-        },
-
-        {
-            path:"/admin/dashboard/addpublishers",
-            element: <AddPublisher />
-        },
-        {
-            path: "/admin/dashboard/updatepublishers/:id",
-            element: <EditPublisherForm /> 
-        },
-        {
-            path:"/admin/dashboard/categories",
-            element: <Categories />
-        },
-        {
-            path:"/admin/dashboard/addcategories",
-            element: <AddCategory />
-        },
-        {
-            path: "/admin/dashboard/updatecategory/:categoryId",
-            element: <UpdateCategory /> 
-        },
-        {
-            path:"/admin/dashboard/orders",
-            element: <Order/>
-        },
-        {
-            path:"/admin/dashboard/promotions",
-            element: <Promotions />
-        },
-        {
-            path:"/admin/dashboard/addpromotion",
-            element: <AddPromotion />
-        },
-        {
-            path:"/admin/dashboard/authors",
-            element: <Authors/>
-        },
-        {
-            path:"/admin/dashboard/addauthors",
-            element: <AddAuthor />
-        },
-        {
-            path: "/admin/dashboard/updateauthor/:authorId",
-            element: <UpdateAuthor /> 
-        },
-        {
-            path:"/admin/dashboard/bookreceipts",
-            element: <CreateBookReceipt />
-        },
-        {
-            path:"/admin/dashboard/suppliers",
-            element: <Suppliers />
-        },
-        {
-            path:"/admin/dashboard/comments",
-            element: <Comments/>
-        },
-        {
-            path:"/admin/dashboard/addsuppliers",
-            element: <AddSupplier/>
-        },
-        {
-            path:"/admin/dashboard/updatesuppliers/:supplierId",
-            element: <UpdateSupplier/>
-        },
-        {
-            path:"/admin/dashboard/categories-bookreceipt",
-            element: <CategoryBookReceipt/>
-        },
-        {
-            path:"/admin/dashboard/news",
-            element: <AdminNews/>
-        },
-        {
-            path:"/admin/dashboard/addnews",
-            element: <AddNews/>
-        },
-        {
-            path:"/admin/dashboard/updatenews/:newsId",
-            element: <UpdateNews/>
-        },
-        {
-            path:"/admin/dashboard/request-return",
-            element: <Request/>
-        },
-        {
-            path:"/admin/dashboard/book-receipt/view/:id",
-            element: <ViewBookReceipt/>
-        },
-        {
-            path:"/admin/dashboard/book-receipt/edit/:id",
-            element: <EditBookReceipt/>
-        },
-
-
-       
+      { path: "", element: <DashBoard /> },
+      { path: "products", element: <Products /> },
+      { path: "add-product", element: <AddProduct /> },
+      { path: "publishers", element: <Publishers /> },
+      { path: "addpublishers", element: <AddPublisher /> },
+      { path: "updatepublishers/:id", element: <EditPublisherForm /> },
+      { path: "categories", element: <Categories /> },
+      { path: "addcategories", element: <AddCategory /> },
+      { path: "updatecategory/:categoryId", element: <UpdateCategory /> },
+      { path: "orders", element: <Order /> },
+      { path: "promotions", element: <Promotions /> },
+      { path: "addpromotion", element: <AddPromotion /> },
+      { path: "authors", element: <Authors /> },
+      { path: "addauthors", element: <AddAuthor /> },
+      { path: "updateauthor/:authorId", element: <UpdateAuthor /> },
+      { path: "bookreceipts", element: <CreateBookReceipt /> },
+      { path: "suppliers", element: <Suppliers /> },
+      { path: "comments", element: <Comments /> },
+      { path: "addsuppliers", element: <AddSupplier /> },
+      { path: "updatesuppliers/:supplierId", element: <UpdateSupplier /> },
+      { path: "categories-bookreceipt", element: <CategoryBookReceipt /> },
+      { path: "news", element: <AdminNews /> },
+      { path: "addnews", element: <AddNews /> },
+      { path: "updatenews/:newsId", element: <UpdateNews /> },
+      { path: "request-return", element: <Request /> },
+      { path: "book-receipt/view/:id", element: <ViewBookReceipt /> },
+      { path: "book-receipt/edit/:id", element: <EditBookReceipt /> },
     ]
-}
+  }
 ]);
 
 export default router;
