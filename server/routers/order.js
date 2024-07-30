@@ -389,7 +389,7 @@ orderRouter.post('/callback', async (req, res) => {
 
     }
   } catch (ex) {
-    result.return_code = 0; // ZaloPay server sẽ callback lại (tối đa 3 lần)
+    result.return_code = 0; 
     result.return_message = ex.message;
     const { order_token  } = dataJson;
     await Order.deleteOne({ 'order_token': order_token });

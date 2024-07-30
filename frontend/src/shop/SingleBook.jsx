@@ -2,12 +2,16 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CartContext } from './CartContext';
+import { UserContext } from '../authencation/UserContext';
 import BookCard from '../components/BookCard';
 import Reviews from '../components/Review';
 import RatingStart from '../components/RatingStart';
+import GrayHeartIcon from '../assets/wishlist.png';
+import RedHeartIcon from '../assets/wishlist-red.png';
 
 const SingleBook = () => {
   const { addToCart } = useContext(CartContext);
+  const { user } = useContext(UserContext);
   const { _id, name, images, price, promotion_price, description, promotion_percent, author, quantity } = useLoaderData();
   const [authorName, setAuthorName] = useState('');
   const [categoriesData, setCategoriesData] = useState([]);
@@ -15,6 +19,7 @@ const SingleBook = () => {
   const [averageRating, setAverageRating] = useState(null);
   const [commentsCount, setCommentsCount] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
+  const [isFavorite, setIsFavorite] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +36,10 @@ const SingleBook = () => {
         const ratingCountResponse = await axios.get(`http://localhost:5000/api/book/${_id}/rating-count`);
         setCommentsCount(ratingCountResponse.data.userRatingsCount);
         
+        if (user && user._id) {
+          const favoritesResponse = await axios.get(`http://localhost:5000/favorite/${user._id}`);
+          setIsFavorite(favoritesResponse.data.includes(_id));
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -39,11 +48,27 @@ const SingleBook = () => {
     if (_id) {
       fetchData();
     }
-  }, [_id, author]);
+  }, [_id, author, user]);
 
   const handleBuyNow = () => {
-    addToCart({ _id, name, price, promotion_price, images });
+    addToCart({ _id, name, price, promotion_price, images, quantity });
     navigate('/cart'); 
+  };
+
+  const toggleFavorite = async () => {
+    const url = isFavorite ? 'http://localhost:5000/remove-favorite' : 'http://localhost:5000/add-favorite';
+
+    try {
+      if (isFavorite) {
+        await axios.delete(url, { data: { userId: user._id, bookId: _id } });
+        setIsFavorite(false);
+      } else {
+        await axios.post(url, { userId: user._id, bookId: _id });
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
 
   return (
@@ -52,12 +77,20 @@ const SingleBook = () => {
       
       <div className="flex flex-col lg:flex-row">
         <div className="lg:w-1/2 lg:pr-8 mb-8 lg:mb-0">
-          <div className="max-w-[400px] mx-auto">
+          <div className="relative max-w-[400px] mx-auto">
             <img
               src={images}
               className="w-full h-full object-cover rounded"
               alt={name}
             />
+            <div className="absolute top-2 left-2 flex space-x-2">
+              <img
+                src={isFavorite ? RedHeartIcon : GrayHeartIcon}
+                className="h-6 w-6 cursor-pointer"
+                alt="Heart Icon"
+                onClick={toggleFavorite}
+              />
+            </div>
             <div className="mt-4 mb-8 flex justify-center">
               <RatingStart bookId={_id} currentRating={averageRating} onRatingChange={setAverageRating} />
             </div>

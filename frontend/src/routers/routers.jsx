@@ -50,6 +50,8 @@ import ViewBookReceipt from "../admin/bookreceipt/ViewBookReceipt";
 import EditBookReceipt from "../admin/bookreceipt/EditBookReceipt";
 import LoginAdmin from '../admin/authencation/LoginAdmin'; 
 import ProtectedRoute from '../admin/authencation/ProtectedRoute'; 
+import ForgotPassword from "../authencation/ForgotPassword";
+import ResetPassword from "../authencation/ResetPassword";
 
 const router = createBrowserRouter([
   // User routes
@@ -78,6 +80,8 @@ const router = createBrowserRouter([
       { path: "/order-success", element: <OrderSuccess /> },
       { path: "/search", element: <Search /> },
       { path: "/ratings/:orderId", element: <Rating /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/reset-password/:token", element: <ResetPassword /> },
     ]
   },
   

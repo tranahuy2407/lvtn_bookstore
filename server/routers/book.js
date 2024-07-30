@@ -1,11 +1,12 @@
 const express = require("express");
 const bookRouter = express.Router();
-const auth = require("../middlewares/auth");
 const { Book } = require("../models/book");
 const Category = require('../models/category');
 const  Author = require('../models/author'); 
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types;
+const Recent = require('../models/recents');
+
 
 // Endpoint lấy tất cả
 bookRouter.get("/api/products", async (req, res) => {
@@ -39,7 +40,6 @@ bookRouter.get('/api/products/search/:query?', async (req, res) => {
   try {
     let query = decodeURIComponent(req.params.query?.trim());
 
-    // Nếu không có query hoặc query là 'undefined', trả về tất cả các sách
     if (!query || query === 'undefined') {
       const books = await Book.find().populate('author');
       return res.json(books);
@@ -47,11 +47,10 @@ bookRouter.get('/api/products/search/:query?', async (req, res) => {
 
     let authorId;
 
-    // Chuyển đổi query thành ObjectID nếu là một chuỗi hợp lệ
     try {
       authorId = mongoose.Types.ObjectId(query);
     } catch (error) {
-      // Nếu không phải là ObjectID hợp lệ, tìm tác giả theo tên
+     
       const author = await Author.findOne({ name: { $regex: query, $options: "i" } });
       if (author) {
         authorId = author._id;
@@ -127,7 +126,6 @@ bookRouter.get('/api/best-sellers', async (req, res) => {
   }
 });
 
-
 // Endpoint để lấy các sản phẩm liên quan
 bookRouter.get("/api/related-books/:bookId", async (req, res) => {
   try {
@@ -161,5 +159,43 @@ bookRouter.get('/books/by-author/:authorId', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+// Đếm số lần click vào sách
+bookRouter.post('/api/books/:bookId/counter', async (req, res) => {
+  const { bookId } = req.params;
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    let recent = await Recent.findOne({ userId });
+
+    if (!recent) {
+      recent = new Recent({
+        userId,
+        books: []
+      });
+    }
+    const bookIndex = recent.books.findIndex(entry => entry._id.toString() === bookId);
+
+    if (bookIndex !== -1) {
+      recent.books[bookIndex].count += 1;
+    } else {
+      recent.books.push({
+        _id: bookId,
+        count: 1
+      });
+    }
+
+    await recent.save();
+    res.status(200).json({ message: 'Book click count updated successfully' });
+  } catch (error) {
+    console.error('Error updating book click count:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 module.exports = bookRouter;

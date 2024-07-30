@@ -1,12 +1,17 @@
 const express = require("express");
 const bcryptjs = require("bcryptjs");
+const crypto = require('crypto');
 const authRouter = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 authRouter.use(cookieParser());
+const SendMail = require("./sendmail");
 const jwtSecret = process.env.JWT_SECRET || "fasesaddyuasqwee16asdas2"; 
+const NodeCache = require('node-cache');
+const cache = new NodeCache();
+
 
 // Đăng ký
 authRouter.post("/api/signup", async (req, res) => {
@@ -118,5 +123,63 @@ authRouter.post("/api/updateProfile", async (req, res) => {
     res.status(500).json({ error: "Đã xảy ra lỗi khi cập nhật thông tin hồ sơ" });
   }
 });
+
+//mail reset pass
+authRouter.post('/api/forgotpassword', async (req, res) => {
+  const { email } = req.body;
+  console.log(email)
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'Người dùng không tồn tại' });
+    }
+
+ 
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    await cache.set(`resetToken:${resetToken}`, user._id, 'EX', 3600);
+
+    const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+    await SendMail.sendEmailResetPassword(user.email, resetLink);
+
+    res.status(200).json({ message: 'Liên kết đặt lại mật khẩu đã được gửi' });
+  } catch (error) {
+    console.error('Error in forgot password API:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+});
+
+
+//update pass reset
+authRouter.post('/api/resetpassword', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const userId = cache.get(`resetToken:${token}`);
+    if (!userId) {
+      return res.status(400).json({ msg: 'Token không hợp lệ hoặc đã hết hạn.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ msg: 'Người dùng không tồn tại.' });
+    }
+
+    const salt = await bcryptjs.genSalt(10);
+    const hashedPassword = await bcryptjs.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+
+    await cache.del(`resetToken:${token}`);
+
+    res.status(200).json({ msg: 'Mật khẩu đã được đặt lại thành công. Bạn có thể đăng nhập với mật khẩu mới.' });
+  } catch (e) {
+    console.error("Reset password error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 
 module.exports = authRouter;

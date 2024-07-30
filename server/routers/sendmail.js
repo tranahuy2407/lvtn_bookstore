@@ -77,6 +77,40 @@ const sendEmailCreateOrder = async (email, orderData) => {
   }
 };
 
+
+const sendEmailResetPassword = async (email, resetLink) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.MAIL_ACCOUNT,
+        pass: process.env.MAIL_PASSWORD,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: process.env.MAIL_ACCOUNT,
+      to: email,
+      subject: "Bạn đã gửi yêu cầu cập nhật mật khẩu đến HS BookStore ✔",
+      text: "HS Bookstore sẽ giúp bạn lấy lại mật khẩu. Chúc bạn một ngày làm việc thật năng suất.",
+      html: `
+        <p>Gặp khó khăn khi đăng nhập?</p>
+        <p>Việc đặt lại mật khẩu của bạn rất đơn giản.</p>
+        <p>Chỉ cần nhấp vào nút dưới đây và làm theo hướng dẫn. Chúng tôi sẽ giúp bạn lấy lại quyền truy cập ngay lập tức.</p>
+        <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px;">Đặt lại mật khẩu</a>
+        <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>
+      `,
+    });
+
+    console.log("Message sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
+
 module.exports = {
-  sendEmailCreateOrder
+  sendEmailCreateOrder,
+  sendEmailResetPassword
 };

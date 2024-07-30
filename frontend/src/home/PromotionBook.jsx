@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCartShopping } from 'react-icons/fa6'; 
+import { UserContext } from '../authencation/UserContext';
 
 const PromotionBook = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAll, setShowAll] = useState(false); 
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     fetchBooks();
@@ -28,6 +30,29 @@ const PromotionBook = () => {
     }
   };
 
+  const handleBookClick = async (bookId) => {
+    if (!user) {
+      alert('Please log in to track clicks.');
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:5000/api/books/${bookId}/counter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ userId: user._id })
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update click count');
+      }
+    } catch (error) {
+      console.error('Error updating click count:', error);
+    }
+  };
+  
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -44,7 +69,7 @@ const PromotionBook = () => {
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-4'>
         {displayedBooks.map((book) => (
           <div key={book._id} className='relative bg-white shadow-md rounded-md overflow-hidden'>
-            <Link to={`/book/${book._id}`}>
+            <Link to={`/book/${book._id}`} onClick={() => handleBookClick(book._id)}>
               <div className='h-64 flex items-center justify-center overflow-hidden bg-gray-200'>
                 <img 
                   src={book.images || 'placeholder.jpg'} 

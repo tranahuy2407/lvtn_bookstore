@@ -1,3 +1,4 @@
+
 import React, { useContext, useState, useEffect } from 'react';
 import { CartContext } from './CartContext';
 import { UserContext } from '../authencation/UserContext';
@@ -184,22 +185,22 @@ const Cart = () => {
           <table className='w-full'>
             <thead>
               <tr>
-                <th className='py-2'>Ảnh</th>
-                <th className='py-2'>Tên sách</th>
-                <th className='py-2'>Số lượng</th>
-                <th className='py-2'>Số lượng tồn kho</th>
-                <th className='py-2'>Đơn giá</th>
-                <th className='py-2'>Xóa</th>
+                <th className='py-2 text-center'>Ảnh</th>
+                <th className='py-2 text-center'>Tên sách</th>
+                <th className='py-2 text-center'>Số lượng</th>
+  		   <th className='py-2'>Số lượng tồn kho</th>
+                <th className='py-2 text-center'>Đơn giá</th>
+                <th className='py-2 text-center'>Xóa</th>
               </tr>
             </thead>
             <tbody>
               {cartItems.map((item) => (
                 <tr key={item.cartId} className='border-t'>
-                  <td className='py-4'>
-                    <img src={item.images} alt={item.name} className='w-20 h-20 object-cover' />
+                  <td className='py-4 text-center'>
+                    <img src={item.images} alt={item.name} className='w-20 h-20 object-cover mx-auto' />
                   </td>
                   <td className='py-4 text-center'>{item.name}</td>
-                  <td className='py-4'>
+                  <td className='py-4 text-center'>
                     <div className='flex items-center justify-center'>
                       <button
                         className='bg-blue-500 font-semibold text-white py-2 px-4 rounded'
@@ -211,7 +212,7 @@ const Cart = () => {
                         type='text'
                         min='1'
                         value={temporaryQuantities[item.cartId] || ''}
-                        className='cart-quantity-input'
+                        className='cart-quantity-input mx-2 text-center'
                         onChange={(e) => handleTemporaryQuantityChange(item.cartId, e.target.value)}
                         onBlur={(e) => handleQuantityBlur(item.cartId, e.target.value)}
                       />
@@ -223,12 +224,13 @@ const Cart = () => {
                       </button>
                     </div>
                   </td>
-                  <td className='py-4 text-center'>
+  			<td className='py-4 text-center'>
                     {remainingStock[item.cartId]}
                   </td>
+
                   <td className='py-4 text-center'>
                     {typeof item.promotion_price === 'number' ? (
-                      item.promotion_price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+                      item.promotion_price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) + ' x ' + temporaryQuantities[item.cartId] + ' = ' + ( item.promotion_price * temporaryQuantities[item.cartId]).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
                     ) : (
                       'Giá không có sẵn'
                     )}
@@ -247,7 +249,7 @@ const Cart = () => {
               <input type="text" value={discountCodeInput} onChange={handleDiscountCodeChange} placeholder="Nhập mã giảm giá (nếu có)" className="mt-4 p-2 border border-gray-400 rounded" />
               <button className='bg-blue-500 text-white font-semibold py-2 px-4 rounded mt-2' onClick={applyDiscount}>Áp dụng</button>
             </div>
-            <div>
+   		<div>
               <p className='text-xl font-semibold'>Tổng cộng: {totalQuantity} sản phẩm</p>
               <p className='text-xl font-semibold'>Thành tiền: {totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</p>
               {discountApplied && (
@@ -268,3 +270,6 @@ const Cart = () => {
 };
 
 export default Cart;
+
+
+
