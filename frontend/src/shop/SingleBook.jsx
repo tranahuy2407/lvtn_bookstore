@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useLoaderData, useNavigate } from 'react-router-dom';
+import { useLoaderData, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { CartContext } from './CartContext';
 import { UserContext } from '../authencation/UserContext';
@@ -139,7 +139,15 @@ const SingleBook = () => {
             </div>
             
             <div className="flex flex-col space-y-2">
-              <p><span className="font-semibold">Tác giả:</span> {authorName}</p>
+            <p>
+                <span className="font-semibold">Tác giả: </span>
+                <Link 
+                  to={`/shop-by-author/${author}`} 
+                  className="text-black hover:text-blue-500 transition-colors duration-300 no-underline"
+                >
+                  {authorName}
+                </Link>
+              </p>
               <p><span className="font-semibold">Thể loại: </span> 
                 {categoriesData && categoriesData.map((category, index) => (
                   <span key={category._id}>

@@ -169,5 +169,53 @@ commentRouter.post('/api/:bookId/comments', async (req, res) => {
         return res.status(500).json({ message: 'Lỗi hệ thống: Không thể thêm bình luận' });
     }
 });
+
+//lấy ds bình luận
+commentRouter.get('/api/books-with-comments', async (req, res) => {
+    try {
+      const books = await Book.find({ 'comments.0': { $exists: true } }) 
+        .populate('comments.userId', 'username') 
+        .populate('ratings.userId', 'username')  
+        .exec();
+  
+      if (books.length === 0) {
+        return res.status(404).json({ message: 'Không có sách nào có bình luận.' });
+      }
+  
+      res.json(books);
+    } catch (error) {
+      console.error('Lỗi khi lấy sách có bình luận:', error.message);
+      res.status(500).json({ message: 'Có lỗi xảy ra' });
+    }
+  });
+  
+  // trả lời bình luận
+  commentRouter.post('/api/comments/:bookId/:commentId/reply', async (req, res) => {
+    const { bookId, commentId } = req.params;
+    const { reply, adminId } = req.body;
+  
+    try {
+      const book = await Book.findById(bookId);
+  
+      if (!book) {
+        return res.status(404).json({ message: 'Sách không tồn tại' });
+      }
+      const comment = book.comments.id(commentId);
+  
+      if (!comment) {
+        return res.status(404).json({ message: 'Bình luận không tồn tại' });
+      }
+  
+      comment.reply = reply;
+      comment.adminId = adminId;
+  
+      await book.save();
+  
+      res.status(200).json({ message: 'Trả lời bình luận thành công', comment });
+    } catch (error) {
+      console.error('Lỗi khi trả lời bình luận:', error);
+      res.status(500).json({ message: 'Có lỗi xảy ra khi trả lời bình luận' });
+    }
+  });
   
 module.exports = commentRouter;

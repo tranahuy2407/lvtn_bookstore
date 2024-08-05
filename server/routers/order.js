@@ -281,7 +281,7 @@ orderRouter.post('/api/orders', async (req, res) => {
         amount: discountedPrice || totalPrice,
         description: `Thanh toán đơn hàng tại HS BookStore`,
         bank_code: "",
-        callback_url: "https://125c-14-161-48-112.ngrok-free.app/callback", 
+        callback_url: "https://cbc6-27-74-241-88.ngrok-free.app/callback", 
       };
 
       const data = config.app_id + "|" + zaloPayOrder.app_trans_id + "|" + zaloPayOrder.app_user + "|" + zaloPayOrder.amount + "|" + zaloPayOrder.app_time + "|" + zaloPayOrder.embed_data + "|" + zaloPayOrder.item;

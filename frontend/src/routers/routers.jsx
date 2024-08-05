@@ -53,6 +53,7 @@ import ProtectedRoute from '../admin/authencation/ProtectedRoute';
 import ForgotPassword from "../authencation/ForgotPassword";
 import ResetPassword from "../authencation/ResetPassword";
 import ProtectedRouteUser from './ProtectedRouteUser'; 
+import Shop_By_Author from "../shop_by_category/Shop_By_Author";
 
 const router = createBrowserRouter([
   // User routes
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: "/all-shop", element: <Shop /> },
       { path: "/shop/:id", element: <ShopByCategory /> },
       { path: "/shop/program-promotion/:id", element: <ShopByPromotion /> },
+      { path: "/shop-by-author/:authorId", element: <Shop_By_Author />},
       { path: "/about", element: <About /> },
       { path: "/news", element: <News /> },
       { path: "/signup", element: <SignUpPage /> },
