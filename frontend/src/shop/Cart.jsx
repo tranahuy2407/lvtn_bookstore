@@ -11,7 +11,7 @@ const Cart = () => {
     cartItems, removeFromCart, increaseQuantity, decreaseQuantity, updateQuantity,
     discountApplied, discountedPrice, totalPrice, setDiscountCode,
     discountCode, setDiscountApplied, setDiscountedPrice, successMessage,
-    setSuccessMessage, errorMessage, setErrorMessage 
+    setSuccessMessage, errorMessage, setErrorMessage , setShippingCost
   } = useContext(CartContext);
   const { user } = useContext(UserContext);
   const [discountCodeInput, setDiscountCodeInput] = useState('');
@@ -63,18 +63,31 @@ const Cart = () => {
           type: promotion.type,
           value: promotion.value
         });
+  
+        let discountAmount = 0;
+        if (promotion.type === 'percent') {
+          discountAmount = (totalPrice * promotion.value) / 100;
+        } else if (promotion.type === 'money') {
+          discountAmount = promotion.value;
+        } else if (promotion.type === 'ship') {
+          setShippingCost(promotion.value);
+          discountAmount = 0; 
+        }
+  
+        setDiscountedPrice(totalPrice - discountAmount);
       }
     } catch (error) {
-      if (error.response.status === 400 && error.response.data.msg === 'Bạn đã sử dụng mã giảm giá này rồi!') {
-        setErrorMessage(error.response.data.msg);
-        setSuccessMessage('');
+      console.error('Error applying discount:', error.response ? error.response.data : error.message);
+      if (error.response && error.response.status === 400) {
+        setErrorMessage(error.response.data.msg || 'Invalid request');
       } else {
-        setErrorMessage('Đã xảy ra lỗi khi áp dụng mã giảm giá.');
-        setSuccessMessage('');
+        setErrorMessage('An unexpected error occurred');
       }
+      setSuccessMessage('');
       setDiscountApplied(false);
     }
   };
+  
 
   const handleTemporaryQuantityChange = (cartId, newQuantity) => {
     setTemporaryQuantities((prev) => ({
@@ -188,7 +201,7 @@ const Cart = () => {
                 <th className='py-2 text-center'>Ảnh</th>
                 <th className='py-2 text-center'>Tên sách</th>
                 <th className='py-2 text-center'>Số lượng</th>
-  		   <th className='py-2'>Số lượng tồn kho</th>
+  		          <th className='py-2'>Số lượng tồn kho</th>
                 <th className='py-2 text-center'>Đơn giá</th>
                 <th className='py-2 text-center'>Xóa</th>
               </tr>
@@ -224,7 +237,7 @@ const Cart = () => {
                       </button>
                     </div>
                   </td>
-  			<td className='py-4 text-center'>
+  		          	<td className='py-4 text-center'>
                     {remainingStock[item.cartId]}
                   </td>
 
@@ -252,6 +265,7 @@ const Cart = () => {
    		<div>
               <p className='text-xl font-semibold'>Tổng cộng: {totalQuantity} sản phẩm</p>
               <p className='text-xl font-semibold'>Thành tiền: {totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</p>
+              <p className='text-xl font-semibold'>Số tiền được giảm: {(totalPrice - discountedPrice).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</p>
               {discountApplied && (
                 <p className='text-xl font-semibold'>Giá sau khi giảm giá: {discountedPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</p>
               )}

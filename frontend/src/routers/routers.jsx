@@ -52,6 +52,7 @@ import LoginAdmin from '../admin/authencation/LoginAdmin';
 import ProtectedRoute from '../admin/authencation/ProtectedRoute'; 
 import ForgotPassword from "../authencation/ForgotPassword";
 import ResetPassword from "../authencation/ResetPassword";
+import ProtectedRouteUser from './ProtectedRouteUser'; 
 
 const router = createBrowserRouter([
   // User routes
@@ -62,21 +63,28 @@ const router = createBrowserRouter([
       { path: "/", element: <Home /> },
       { path: "/all-shop", element: <Shop /> },
       { path: "/shop/:id", element: <ShopByCategory /> },
-      { path: "/shop/promotion/:id", element: <ShopByPromotion /> },
+      { path: "/shop/program-promotion/:id", element: <ShopByPromotion /> },
       { path: "/about", element: <About /> },
       { path: "/news", element: <News /> },
       { path: "/signup", element: <SignUpPage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/account", element: <AccountPage /> },
       { path: "/account/:subpage?", element: <AccountPage /> },
-      { path: "/book/:id", element: <SingleBook />, loader: ({ params }) => fetch(`http://localhost:5000/api/products/${params.id}`) },
+      { path: "/book/:id", 
+        element: <SingleBook/>, 
+        loader: ({ params }) => fetch(`http://localhost:5000/api/products/${params.id}`) },
       { path: "/account/:subpage/:action", element: <Favourites /> },
       { path: "/account/:subpage/:action", element: <OrderMe /> },
       { path: "/account/:subpage/:action", element: <OrderHistory /> },
-      { path: "/account/myorders/:orderId", element: <OrderDetail />, loader: ({ params }) => fetch(`http://localhost:5000/order/${params.orderId}`) },
+      { 
+        path: "/account/myorders/:orderId", 
+        element: <ProtectedRouteUser element={<OrderDetail />} />, 
+        loader: ({ params }) => fetch(`http://localhost:5000/order/${params.orderId}`)
+      },
       { path: "/cart", element: <Cart /> },
       { path: "/checkout", element: <Checkout /> },
-      { path: "/invoice/:orderId", element: <Invoice /> },
+      { path: "/invoice/:orderId", 
+        element: <ProtectedRouteUser element={<Invoice/>} /> },
       { path: "/order-success", element: <OrderSuccess /> },
       { path: "/search", element: <Search /> },
       { path: "/ratings/:orderId", element: <Rating /> },

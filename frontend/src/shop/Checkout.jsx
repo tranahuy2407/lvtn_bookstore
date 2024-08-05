@@ -35,7 +35,7 @@ const Checkout = () => {
   const [shippingCost, setShippingCost] = useState(0);
   const [provinceCost, setProvinceCost] = useState("");
   const [note, setNote] = useState("");
-
+  const isDiscountShipType = discountCode && discountCode.type === "ship";
   // Hàm để tách tỉnh từ địa chỉ
   const extractProvince = (address) => {
     const lastCommaIndex = address.lastIndexOf(',');
@@ -73,26 +73,26 @@ const Checkout = () => {
     }
   }, [user]);
 
-  // Tính phí vận chuyển khi có tỉnh hoặc địa chỉ mặc định thay đổi
-  useEffect(() => {
-    const provinceToUse = useDefaultAddress ? provinceCost : province?.full_name;
-    if (provinceToUse) {
-      fetch(`http://localhost:5000/shipping-cost/${provinceToUse}`)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.cost) {
-            setShippingCost(data.cost);
-          } else {
-            setShippingCost(0);
-            setErrorMessage("Không tìm thấy thông tin vận chuyển cho tỉnh này.");
-          }
-        })
-        .catch((error) => {
-          console.error("Lỗi khi lấy thông tin vận chuyển:", error);
-          setErrorMessage("Đã xảy ra lỗi khi lấy thông tin vận chuyển.");
-        });
-    }
-  }, [province, useDefaultAddress]);
+// Tính phí vận chuyển khi có tỉnh hoặc địa chỉ mặc định thay đổi
+useEffect(() => {
+  const provinceToUse = useDefaultAddress ? provinceCost : province?.full_name;
+  if (provinceToUse) {
+    fetch(`http://localhost:5000/shipping-cost/${provinceToUse}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.cost) {
+          setShippingCost(isDiscountShipType ? 0 : data.cost);
+        } else {
+          setShippingCost(isDiscountShipType ? 0 : 0);
+          setErrorMessage("Không tìm thấy thông tin vận chuyển cho tỉnh này.");
+        }
+      })
+      .catch((error) => {
+        console.error("Lỗi khi lấy thông tin vận chuyển:", error);
+        setErrorMessage("Đã xảy ra lỗi khi lấy thông tin vận chuyển.");
+      });
+  }
+}, [province, useDefaultAddress, isDiscountShipType]);
   // Lấy danh sách tỉnh thành khi component mount
   useEffect(() => {
     fetch("https://esgoo.net/api-tinhthanh/1/0.htm")
@@ -216,7 +216,7 @@ const Checkout = () => {
             },
             quantity: item.cartQuantity,
           })),
-          totalPrice: finalPrice + shippingCost,
+          totalPrice: totalCost,
           address: useDefaultAddress ? user.address : `${address}, ${ward}, ${district.full_name}, ${province.full_name}`,
           paymentMethod,
           name: useDefaultAddress ? user.name : fullName,
@@ -286,6 +286,8 @@ const Checkout = () => {
   };
 
   const finalPrice = discountApplied ? discountedPrice : totalPrice;
+  const totalCost = finalPrice + (isDiscountShipType ? 0 : shippingCost);
+
   return (
     <div className="relative mx-auto w-full bg-white mt-28">
       <div className="grid min-h-screen grid-cols-10">
@@ -553,11 +555,11 @@ const Checkout = () => {
             <div className="space-y-2">
             <p className="flex justify-between text-lg font-bold text-white">
                 <span>Phí vận chuyển (ship):</span>
-                <span>{shippingCost} VNĐ</span>
+                <span>{(isDiscountShipType ? 0 : shippingCost)} VNĐ</span>
               </p>
               <p className="flex justify-between text-lg font-bold text-white">
                 <span>Tổng cộng:</span>
-                <span>{totalPrice + shippingCost} đ</span>
+                <span>{totalPrice + (isDiscountShipType ? 0 : shippingCost)} đ</span>
               </p>
               <p className="flex justify-between text-sm font-medium text-white">
                 <span>Đã áp dụng mã giảm:</span>
@@ -569,7 +571,7 @@ const Checkout = () => {
               </p>
               <p className="flex justify-between text-lg font-bold text-white">
                 <span>Giá sau giảm:</span>
-                <span>{finalPrice + shippingCost}đ</span>
+                <span>{totalCost}đ</span>
               </p>
             </div>
             

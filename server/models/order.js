@@ -84,7 +84,7 @@ orderSchema.pre('save', async function(next) {
   this.updatedAt = new Date();
   if (this.isNew) {
     try {
-      const lastOrder = await mongoose.model('Order').findOne().sort({ _id: -1 });
+      const lastOrder = await mongoose.model('Order').findOne().sort({ id: -1 });
       let newCode = '#DH0001'; 
 
       if (lastOrder && lastOrder.orderCode) {

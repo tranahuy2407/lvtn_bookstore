@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -63,20 +64,22 @@ const OrderHistory = () => {
                       <dd className="sm:mt-1">{order.totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</dd>
                     </div>
                   </dl>
-                  <Link
-                    to={`/ratings/${order._id}`}
-                    className="mt-6 flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
-                  >
-                    Đánh giá đơn hàng
-                    <span className="sr-only">cho mã đơn {order._id}</span>
-                  </Link>
-                  <Link
-                    to={`/invoice/${order._id}`}
-                    className="mt-6 flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
-                  >
-                    Xem hóa đơn
-                    <span className="sr-only">cho mã đơn {order._id}</span>
-                  </Link>
+                  <div className="flex flex-col sm:flex-row sm:space-x-4">
+                    <Link
+                      to={`/ratings/${order._id}`}
+                      className="mt-6 flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
+                    >
+                      Đánh giá đơn hàng
+                      <span className="sr-only">cho mã đơn {order._id}</span>
+                    </Link>
+                    <Link
+                      to={`/invoice/${order._id}`}
+                      className="mt-6 flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
+                    >
+                      Xem hóa đơn
+                      <span className="sr-only">cho mã đơn {order._id}</span>
+                    </Link>
+                  </div>
                 </div>
 
                 <table className="mt-4 w-full text-gray-500 sm:mt-6">

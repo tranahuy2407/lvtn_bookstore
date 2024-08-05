@@ -140,6 +140,19 @@ const Shop = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+
+  const handleBookClick = async (bookId) => {
+    if (user && user._id) {
+      try {
+        await axios.post(`http://localhost:5000/api/books/${bookId}/counter`, {
+          userId: user._id
+        });
+      } catch (error) {
+        console.error("Error updating book click count:", error);
+      }
+    }
+  };
+
   return (
     <div className='mt-28 px-4 lg:px-24'>
       <div className="flex">
@@ -240,7 +253,7 @@ const Shop = () => {
                       <button className='bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-semibold mb-2' onClick={() => addToCart(book)}>
                         Thêm vào giỏ hàng
                       </button>
-                      <Link to={`/book/${book._id}`} className='bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-semibold ml-2 mb-2'>
+                      <Link to={`/book/${book._id}`} className='bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-semibold ml-2 mb-2' onClick={() => handleBookClick(book._id)}>
                         Chi tiết
                       </Link>
                     </div>

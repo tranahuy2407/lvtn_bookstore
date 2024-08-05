@@ -7,6 +7,7 @@ const Review = ({ bookId }) => {
   const [reviews, setReviews] = useState([]);
   const [comment, setComment] = useState('');
   const [showAll, setShowAll] = useState(false); 
+  const [error, setError] = useState(null);
   const { user } = useContext(UserContext);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const Review = ({ bookId }) => {
         setReviews(reviewsWithUsernames);
       } catch (error) {
         console.error("Error fetching reviews:", error);
+        setError('Có lỗi xảy ra khi tải đánh giá.');
       }
     };
 
@@ -49,12 +51,12 @@ const Review = ({ bookId }) => {
 
   const handleCommentSubmit = async () => {
     if (!user) {
-      alert('Bạn cần đăng nhập để bình luận.');
+      setError('Bạn cần đăng nhập để bình luận.');
       return;
     }
   
     if (!comment.trim()) {
-      alert('Bình luận không thể để trống.');
+      setError('Bình luận không thể để trống.');
       return;
     }
   
@@ -76,7 +78,7 @@ const Review = ({ bookId }) => {
       setComment(''); 
     } catch (error) {
       console.error('Error adding comment:', error.response?.data || error.message);
-      alert('Có lỗi xảy ra khi thêm bình luận.');
+      setError('Bạn chưa mua sách này!.');
     }
   };
 
@@ -91,6 +93,10 @@ const Review = ({ bookId }) => {
 
   const handleShowLess = () => {
     setShowAll(false);
+  };
+
+  const closeErrorDialog = () => {
+    setError(null);
   };
 
   return (
@@ -183,6 +189,19 @@ const Review = ({ bookId }) => {
           </div>
         </div>
       </div>
+      {error && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-red-600 font-bold">{error}</p>
+            <button
+              onClick={closeErrorDialog}
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded focus:outline-none"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

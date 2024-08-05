@@ -6,7 +6,7 @@ const  Author = require('../models/author');
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types;
 const Recent = require('../models/recents');
-
+const Order = require('../models/order'); 
 
 // Endpoint lấy tất cả
 bookRouter.get("/api/products", async (req, res) => {
@@ -111,21 +111,35 @@ bookRouter.get('/api/books-by-category/:categoryId', async (req, res) => {
 // Endpoint lấy sách bán chạy
 bookRouter.get('/api/best-sellers', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
-    let books = await Book.find();
-    books = books.map(book => {
-      const reduction = book.initial_stock - book.quantity;
-      return { ...book._doc, reduction }; 
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const orders = await Order.find({
+      orderedAt: { $gte: startOfMonth, $lte: endOfMonth },
+    }).lean();
+    const bookSales = {};
+    orders.forEach(order => {
+      order.books.forEach(item => {
+        const bookId = item.book._id.toString();
+        if (!bookSales[bookId]) {
+          bookSales[bookId] = 0;
+        }
+        bookSales[bookId] += item.quantity;
+      });
     });
-    books.sort((a, b) => b.reduction - a.reduction);
-    books = books.slice(0, limit);
+    const bookIds = Object.keys(bookSales);
+    const books = await Book.find({ _id: { $in: bookIds } }).lean();
+    const sortedBooks = books.map(book => ({
+      ...book,
+      totalSold: bookSales[book._id.toString()],
+    })).sort((a, b) => b.totalSold - a.totalSold);
 
-    res.json(books);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.json(sortedBooks);
+  } catch (error) {
+    console.error('Error fetching best sellers:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
 // Endpoint để lấy các sản phẩm liên quan
 bookRouter.get("/api/related-books/:bookId", async (req, res) => {
   try {
@@ -193,6 +207,39 @@ bookRouter.post('/api/books/:bookId/counter', async (req, res) => {
     res.status(200).json({ message: 'Book click count updated successfully' });
   } catch (error) {
     console.error('Error updating book click count:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+// Lấy sách quan tâm 
+bookRouter.get('/api/books/interested', async (req, res) => {
+  try {
+    const { userId, currentBookId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    const recent = await Recent.findOne({ userId });
+
+    if (!recent) {
+      return res.status(404).json({ message: 'No recent books found for this user' });
+    }
+
+    const sortedBooks = recent.books
+      .sort((a, b) => b.count - a.count)
+      .map(entry => ({ _id: entry._id, count: entry.count }));
+
+    const filteredBooks = sortedBooks.filter(entry => entry._id.toString() !== currentBookId);
+
+    const books = await Book.find({ '_id': { $in: filteredBooks.map(b => b._id) } });
+
+    const resultBooks = filteredBooks.map(entry => {
+      const book = books.find(b => b._id.toString() === entry._id.toString());
+      return book ? { ...book.toObject(), count: entry.count } : null;
+    }).filter(b => b);
+
+    res.status(200).json({ books: resultBooks });
+  } catch (error) {
+    console.error('Error retrieving interested books:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

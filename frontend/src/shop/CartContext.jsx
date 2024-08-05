@@ -10,7 +10,7 @@ export const CartProvider = ({ children }) => {
 
   const [discountCode, setDiscountCode] = useState(() => {
     const storedDiscountCode = JSON.parse(localStorage.getItem("discountCode"));
-    return storedDiscountCode || "";
+    return storedDiscountCode || {};
   });
 
   const [discountApplied, setDiscountApplied] = useState(() => {
@@ -23,6 +23,8 @@ export const CartProvider = ({ children }) => {
     return storedDiscountedPrice || 0;
   });
 
+  const [shippingCost, setShippingCost] = useState(0);
+
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -30,6 +32,7 @@ export const CartProvider = ({ children }) => {
     (total, item) => total + item.promotion_price * item.cartQuantity,
     0
   );
+
   const clearCart = () => {
     setCartItems([]);
     localStorage.removeItem('cartItems');
@@ -54,18 +57,22 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     if (discountApplied && discountCode) {
       const promotionValue = discountCode.value || 0; 
-      const discountType = discountCode.type || 'amount'; 
-      
+      const discountType = discountCode.type || 'sum'; 
+
       let discountAmount = 0;
       if (discountType === 'percent') {
         discountAmount = (totalPrice * promotionValue) / 100;
-      } else {
+      } else if (discountType === 'money') {
         discountAmount = promotionValue;
+      } else if (discountType === 'ship') {
+        setShippingCost(promotionValue);
+        discountAmount = 0; 
       }
 
       setDiscountedPrice(totalPrice - discountAmount);
     } else {
       setDiscountedPrice(totalPrice);
+      setShippingCost(0);
     }
   }, [cartItems, totalPrice, discountApplied, discountCode]);
 
@@ -103,34 +110,34 @@ export const CartProvider = ({ children }) => {
   };
 
   const increaseQuantity = (cartId) => {
-  setCartItems((prevItems) => {
-    return prevItems.map((item) =>
-      item.cartId === cartId
-        ? { ...item, cartQuantity: item.cartQuantity + 1 }
-        : item
-    );
-  });
-};
+    setCartItems((prevItems) => {
+      return prevItems.map((item) =>
+        item.cartId === cartId
+          ? { ...item, cartQuantity: item.cartQuantity + 1 }
+          : item
+      );
+    });
+  };
 
-const decreaseQuantity = (cartId) => {
-  setCartItems((prevItems) => {
-    return prevItems.map((item) =>
-      item.cartId === cartId && item.cartQuantity > 1
-        ? { ...item, cartQuantity: item.cartQuantity - 1 }
-        : item
-    );
-  });
-};
+  const decreaseQuantity = (cartId) => {
+    setCartItems((prevItems) => {
+      return prevItems.map((item) =>
+        item.cartId === cartId && item.cartQuantity > 1
+          ? { ...item, cartQuantity: item.cartQuantity - 1 }
+          : item
+      );
+    });
+  };
 
-const updateQuantity = (cartId, newQuantity) => {
-  setCartItems((prevItems) => {
-    return prevItems.map((item) =>
-      item.cartId === cartId
-        ? { ...item, cartQuantity: newQuantity }
-        : item
-    );
-  });
-};
+  const updateQuantity = (cartId, newQuantity) => {
+    setCartItems((prevItems) => {
+      return prevItems.map((item) =>
+        item.cartId === cartId
+          ? { ...item, cartQuantity: newQuantity }
+          : item
+      );
+    });
+  };
 
   return (
     <CartContext.Provider
@@ -140,7 +147,7 @@ const updateQuantity = (cartId, newQuantity) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
-         updateQuantity,
+        updateQuantity,
         discountCode,
         totalPrice,
         setDiscountCode,
@@ -148,8 +155,8 @@ const updateQuantity = (cartId, newQuantity) => {
         setDiscountApplied,
         discountedPrice,
         setDiscountedPrice,
-        discountApplied,
-        setDiscountApplied,
+        shippingCost,
+        setShippingCost,
         successMessage,
         setSuccessMessage,
         errorMessage,

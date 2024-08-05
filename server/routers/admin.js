@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Admin = require("../models/admin");
 const { Book } = require('../models/book');
 const Order = require("../models/order");
+const BookReceipt = require('../models/bookreceipt');
 const bcryptjs = require('bcryptjs');
 const jwtSecret = process.env.JWT_SECRET || "fasesaddyuasqwee16asdas2"; 
 
@@ -129,52 +130,59 @@ adminRouter.post("/admin/change-order-status", admin, async (req, res) => {
   }
 });
 
-// Analytics
-adminRouter.get("/admin/analytics", admin, async (req, res) => {
+// API to get daily revenue and expense data
+adminRouter.get('/admin/analytics', async (req, res) => {
   try {
-    const orders = await Order.find({});
-    let totalEarnings = 0;
-
-    for (let i = 0; i < orders.length; i++) {
-      for (let j = 0; j < orders[i].products.length; j++) {
-        totalEarnings +=
-          orders[i].products[j].quantity * orders[i].products[j].product.price;
+    const receiptsAggregation = await BookReceipt.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createAt" } },
+          totalExpense: { $sum: "$totalPrice" }
+        }
+      },
+      {
+        $sort: { _id: 1 } 
       }
-    }
+    ]);
 
-    let categoryEarnings = {};
+    const ordersAggregation = await Order.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$orderedAt" } },
+          totalRevenue: { $sum: "$totalPrice" }
+        }
+      },
+      {
+        $sort: { _id: 1 } 
+      }
+    ]);
 
-    // Fetch earnings for each category
-    for (let category of categories) {
-      let categoryEarning = await fetchCategoryWiseProduct(category.name);
-      categoryEarnings[category.name] = categoryEarning;
-    }
+    const dataMap = {};
+    receiptsAggregation.forEach(({ _id, totalExpense }) => {
+      dataMap[_id] = { totalExpense, totalRevenue: 0 };
+    });
 
-    let earnings = {
-      totalEarnings,
-      ...categoryEarnings,
-    };
+    // Populate dataMap with orders
+    ordersAggregation.forEach(({ _id, totalRevenue }) => {
+      if (!dataMap[_id]) {
+        dataMap[_id] = { totalExpense: 0, totalRevenue };
+      } else {
+        dataMap[_id].totalRevenue = totalRevenue;
+      }
+    });
 
-    res.json(earnings);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const result = Object.keys(dataMap).map(date => ({
+      date,
+      totalExpense: dataMap[date].totalExpense,
+      totalRevenue: dataMap[date].totalRevenue
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching analytics data:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-async function fetchCategoryWiseProduct(category) {
-  let earnings = 0;
-  let categoryOrders = await Order.find({
-    "products.product.category": category,
-  });
-
-  for (let i = 0; i < categoryOrders.length; i++) {
-    for (let j = 0; j < categoryOrders[i].products.length; j++) {
-      earnings +=
-        categoryOrders[i].products[j].quantity *
-        categoryOrders[i].products[j].product.price;
-    }
-  }
-  return earnings;
-}
 
 module.exports = adminRouter;

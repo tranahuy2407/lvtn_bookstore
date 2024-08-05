@@ -143,4 +143,17 @@ promotionRouter.delete("/api/deletepromotion/:id", async (req, res) => {
   }
 });
 
+//Lấy quà tặng từ tên 
+promotionRouter.get("/api/gift/:name", async (req, res) => {
+  try {
+      const gift = await Gift.findOne({ gifts: req.params.name });
+      if (!gift) {
+          return res.status(404).json({ message: 'Gift not found' });
+      }
+      res.json(gift);
+  } catch (error) {
+      console.error('Error fetching gift:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
 module.exports = promotionRouter;

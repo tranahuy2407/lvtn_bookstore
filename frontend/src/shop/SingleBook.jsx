@@ -16,6 +16,7 @@ const SingleBook = () => {
   const [authorName, setAuthorName] = useState('');
   const [categoriesData, setCategoriesData] = useState([]);
   const [relatedBooks, setRelatedBooks] = useState([]);
+  const [interestedBooks, setInterestedBooks] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
   const [commentsCount, setCommentsCount] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
@@ -39,17 +40,22 @@ const SingleBook = () => {
         if (user && user._id) {
           const favoritesResponse = await axios.get(`http://localhost:5000/favorite/${user._id}`);
           setIsFavorite(favoritesResponse.data.includes(_id));
+  
+          const interestedBooksResponse = await axios.get(`http://localhost:5000/api/books/interested`, {
+            params: { userId: user._id, currentBookId: _id }
+          });
+          setInterestedBooks(interestedBooksResponse.data.books);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
+  
     if (_id) {
       fetchData();
     }
   }, [_id, author, user]);
-
+  
   const handleBuyNow = () => {
     addToCart({ _id, name, price, promotion_price, images, quantity });
     navigate('/cart'); 
@@ -185,6 +191,9 @@ const SingleBook = () => {
 
       <div className="mt-16">
         <BookCard headline="Sản phẩm liên quan" books={relatedBooks} />
+      </div>
+      <div className="mt-16">
+        <BookCard headline="Có thể bạn quan tâm" books={interestedBooks} />
       </div>
     </div>
   );

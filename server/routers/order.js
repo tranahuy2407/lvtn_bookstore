@@ -263,7 +263,7 @@ orderRouter.post('/api/orders', async (req, res) => {
     if (paymentMethod === 'zalopay') {
       const transID = Math.floor(Math.random() * 1000000);
       const embed_data = {
-        redirecturl: "https://github.com/tranahuy2407"
+        redirecturl: "http://localhost:3000/order-success"
       };
       const items = orderBooks.map(book => ({
         name: book.book.name,
@@ -281,7 +281,7 @@ orderRouter.post('/api/orders', async (req, res) => {
         amount: discountedPrice || totalPrice,
         description: `Thanh toán đơn hàng tại HS BookStore`,
         bank_code: "",
-        callback_url: "https://acd5-14-161-48-112.ngrok-free.app/callback", 
+        callback_url: "https://125c-14-161-48-112.ngrok-free.app/callback", 
       };
 
       const data = config.app_id + "|" + zaloPayOrder.app_trans_id + "|" + zaloPayOrder.app_user + "|" + zaloPayOrder.amount + "|" + zaloPayOrder.app_time + "|" + zaloPayOrder.embed_data + "|" + zaloPayOrder.item;
@@ -375,12 +375,12 @@ orderRouter.post('/callback', async (req, res) => {
       let dataJson = JSON.parse(dataStr, config.key2);
       console.log("update order's status = success where app_trans_id =", dataJson["app_trans_id"]);
       const { order_token } = dataJson;
+      console.log(order_token)
       const updatedOrder = await Order.findOneAndUpdate(
         { 'order_token': order_token },
         { $set: { status: 0, description: 'Đơn hàng của bạn đã được thanh toán và đang được xử lý trong hệ thống.' } },
         { new: true }
       );
-
       if (!updatedOrder) {
         throw new Error('Không tìm thấy đơn hàng để cập nhật trạng thái.');
       }
@@ -444,6 +444,9 @@ orderRouter.put('/order/:orderId/confirm', async (req, res) => {
   }
 });
 
-
+//Đặt lại đơn
+orderRouter.post('/reorder/:orderId', async (req, res) => {
+  
+});
 
 module.exports = orderRouter;

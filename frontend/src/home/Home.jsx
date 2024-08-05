@@ -4,6 +4,9 @@ import BestSellerBooks from '../home/BestSellerBooks'
 import PromotionBook from './PromotionBook'
 import Category from './Category'
 import Service from './Service'
+import FloatingIcon from '../components/chatbot/FloatingIcon'
+import Chatbot from '../components/chatbot/Chatbot'
+
 const Home = () => {
   return (
     <div> 
@@ -12,6 +15,8 @@ const Home = () => {
       <PromotionBook/>
       <BestSellerBooks/>
       <Service/>
+      <Chatbot /> 
+      <FloatingIcon/>
     </div>
   )
 }

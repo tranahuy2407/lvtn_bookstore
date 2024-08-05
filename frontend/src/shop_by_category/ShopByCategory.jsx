@@ -106,6 +106,18 @@ const ShopByCategory = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  const handleBookClick = async (bookId) => {
+    if (user && user._id) {
+      try {
+        await axios.post(`http://localhost:5000/api/books/${bookId}/counter`, {
+          userId: user._id
+        });
+      } catch (error) {
+        console.error("Error updating book click count:", error);
+      }
+    }
+  };
+
   return (
     <div className="mt-28 px-4 lg:px-24 flex">
       <div className="w-1/4 pr-8">
@@ -176,6 +188,7 @@ const ShopByCategory = () => {
                   <Link
                     to={`/book/${product._id}`}
                     className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+                    onClick={() => handleBookClick(product._id)}
                   >
                     Xem chi tiết
                   </Link>

@@ -1,5 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
+require('dotenv').config();
+
 
 const adminRouter = require("./routers/admin");
 const authRouter = require("./routers/auth");
@@ -15,6 +17,9 @@ const invoiceRouter = require("./routers/invoice");
 const bookReceiptRouter = require("./routers/bookreceipt");
 const newRouter = require("./routers/new");
 const commentRouter = require("./routers/comment");
+const chatbotRouter = require("./routers/chatbot")
+const programRouter = require("./routers/program");
+
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -42,6 +47,8 @@ app.use(invoiceRouter);
 app.use(bookReceiptRouter);
 app.use(newRouter);
 app.use(commentRouter);
+app.use(chatbotRouter);
+app.use(programRouter);
 
 mongoose
   .connect(DB)

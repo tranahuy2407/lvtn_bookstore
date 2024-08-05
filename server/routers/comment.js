@@ -128,36 +128,46 @@ commentRouter.get("/:bookId/comments", async (req, res) => {
 commentRouter.post('/api/:bookId/comments', async (req, res) => {
     const { bookId } = req.params;
     const { userId, content } = req.body;
-  
+
     try {
-      const book = await Book.findById(bookId);
-      if (!book) {
-        return res.status(404).json({ message: 'Book not found' });
-      }
-    // Kiểm tra đơn hàng
-    const userOrders = await Order.find({ 
-        userId: userId, 
-        'books.book._id': bookId 
-    });
-  
-      if (!userOrders) {
-        return res.status(403).json({ message: 'User has not purchased this book' });
-      }
-  
-      const newComment = {
-        userId,
-        comments: [content],
-        status: 1,
-        reply: "",
-      };
-      book.comments.push(newComment);
-      await book.save();
-  
-      return res.status(201).json(newComment);
+        if (!mongoose.Types.ObjectId.isValid(bookId)) {
+            return res.status(400).json({ message: 'ID sách không hợp lệ' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'ID người dùng không hợp lệ' });
+        }
+
+        const book = await Book.findById(bookId);
+        if (!book) {
+            return res.status(404).json({ message: 'Sách không tồn tại' });
+        }
+
+        // Kiểm tra đơn hàng
+        const userOrders = await Order.find({ 
+            userId: userId, 
+            'books.book._id': bookId 
+        });
+
+        if (userOrders.length === 0) {
+            return res.status(403).json({ message: 'Người dùng chưa mua sách này' });
+        }
+
+        const newComment = {
+            userId,
+            comments: [content],
+            status: 1,
+            reply: "",
+        };
+
+        book.comments.push(newComment);
+        await book.save();
+
+        return res.status(201).json(newComment);
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Server error' });
+        console.error(error);
+        return res.status(500).json({ message: 'Lỗi hệ thống: Không thể thêm bình luận' });
     }
-  });
+});
   
 module.exports = commentRouter;

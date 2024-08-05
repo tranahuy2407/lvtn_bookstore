@@ -7,18 +7,18 @@ import bannerPlaceholder from '../assets/promotion_1-6.jpg';
 import axios from 'axios';
 
 const Banner = () => {
-  const [promotions, setPromotions] = useState([]);
+  const [programs, setPrograms] = useState([]);
 
   useEffect(() => {
-    const fetchPromotions = async () => {
+    const fetchPrograms = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/promotions');
-        setPromotions(response.data.promotions);
+        const response = await axios.get('http://localhost:5000/programs');
+        setPrograms(response.data); 
       } catch (error) {
-        console.error('Error fetching promotions:', error);
+        console.error('Error fetching programs:', error);
       }
     };
-    fetchPromotions();
+    fetchPrograms();
   }, []);
 
   const placeholderImage = bannerPlaceholder;
@@ -36,13 +36,13 @@ const Banner = () => {
             interval={3000}
             stopOnHover={true}
           >
-            {promotions.map((promotion) => (
-              <Link key={promotion._id} to={`/shop/promotion/${promotion._id}`}>
+            {programs.map((program) => (
+              <Link key={program._id} to={`/shop/program-promotion/${program._id}`}>
                 <div>
                   <img
                     className="w-full h-full object-cover rounded-lg"
-                    src={promotion.image || placeholderImage}
-                    alt={promotion.description}
+                    src={program.image || placeholderImage}
+                    alt={program.description}
                   />
                 </div>
               </Link>
