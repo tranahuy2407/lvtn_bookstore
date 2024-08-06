@@ -35,7 +35,7 @@ const sendEmailCreateOrder = async (email, orderData) => {
       html: `
         <section style="max-width: 600px; margin: 0 auto; padding: 16px; font-family: Arial, sans-serif; background-color: #f9f9f9;">
           <header style="text-align: center;">
-            <img src="../../frontend/src/assets/Logo.JPG" alt="HS BookStore Logo" style="height: 50px; margin-bottom: 16px;">
+            <img src="../../frontend/src/assets/Logo.jpg" alt="HS BookStore Logo" style="height: 50px; margin-bottom: 16px;">
           </header>
           <main>
             <h2>Chào ${orderData.name},</h2>

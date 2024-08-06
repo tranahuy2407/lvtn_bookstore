@@ -62,8 +62,10 @@ const orderSchema = mongoose.Schema({
   },
   orderCode: {
     type: String,
-    required: false,
     unique: true,
+  },
+  orderToken: {
+    type: String, 
   },
   statusHistory: [
     {
@@ -79,12 +81,12 @@ const orderSchema = mongoose.Schema({
   ],
 });
 
-// Middleware để tự động tạo mã đơn hàng
+// Middleware to automatically generate orderCode
 orderSchema.pre('save', async function(next) {
   this.updatedAt = new Date();
   if (this.isNew) {
     try {
-      const lastOrder = await mongoose.model('Order').findOne().sort({ id: -1 });
+      const lastOrder = await this.constructor.findOne().sort({ orderCode: -1 }).exec();
       let newCode = '#DH0001'; 
 
       if (lastOrder && lastOrder.orderCode) {
@@ -112,15 +114,15 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
-// Middleware để thêm vào lịch sử trạng thái trước khi update
+
 orderSchema.pre('findOneAndUpdate', function(next) {
   const update = this.getUpdate();
-  if (update.status !== undefined) {
+  if (update.$set && update.$set.status !== undefined) {
     if (!update.$push) {
       update.$push = {};
     }
-    update.$push.statusHistory = { status: update.status, updatedAt: new Date() };
-    update.updatedAt = new Date();
+    update.$push.statusHistory = { status: update.$set.status, updatedAt: new Date() };
+    update.$set.updatedAt = new Date(); 
   }
 
   next();

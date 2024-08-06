@@ -152,6 +152,12 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 				path: '/admin/dashboard/addpromotion',
 				icon: <FcPlus />
 			},
+			{
+				key: 'program',
+				label: 'Chương trình khuyến mãi',
+				path: '/admin/dashboard/program',
+				icon: <HiOutlineDocumentText />
+			},
 		]
 	},
 	{

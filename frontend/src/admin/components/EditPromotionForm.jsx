@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Input, Button, Upload, message, DatePicker, InputNumber } from 'antd';
+import { Form, Input, Button, Upload, message, DatePicker, InputNumber, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import moment from 'moment';
+
+const { Option } = Select;
 
 const EditPromotionForm = ({ promotion, onClose, onUpdatePromotion }) => {
   const UPLOAD_PRESET = "yznfezyj";
@@ -13,6 +15,7 @@ const EditPromotionForm = ({ promotion, onClose, onUpdatePromotion }) => {
   const [imageName, setImageName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [books, setBooks] = useState([]);
 
   useEffect(() => {
     setUpdatedPromotion(promotion);
@@ -20,6 +23,17 @@ const EditPromotionForm = ({ promotion, onClose, onUpdatePromotion }) => {
     if (promotion.image) {
       setImageName(promotion.image.split('/').pop());
     }
+    // Fetch books data
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/products');
+        setBooks(response.data);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+        message.error('Failed to fetch books.');
+      }
+    };
+    fetchBooks();
   }, [promotion]);
 
   const handleChange = (e) => {
@@ -110,6 +124,18 @@ const EditPromotionForm = ({ promotion, onClose, onUpdatePromotion }) => {
     }
   };
 
+  const handleBooksChange = (values) => {
+    if (values.includes('select_all')) {
+      setUpdatedPromotion(prev => ({ ...prev, books: books.map(book => book._id) }));
+    } else if (values.includes('deselect_all')) {
+      setUpdatedPromotion(prev => ({ ...prev, books: [] }));
+    } else {
+      setUpdatedPromotion(prev => ({ ...prev, books: values }));
+    }
+  };
+
+  const isAllSelected = updatedPromotion.books.length === books.length;
+
   return (
     <div className="bg-white p-6 rounded-md shadow-lg max-w-2xl mx-auto">
       <h2 className="text-lg font-medium mb-4">Chỉnh sửa khuyến mãi</h2>
@@ -151,6 +177,27 @@ const EditPromotionForm = ({ promotion, onClose, onUpdatePromotion }) => {
             />
           </Form.Item>
         </div>
+        <Form.Item label="Sách áp dụng">
+          <Select
+            mode="multiple"
+            placeholder="Chọn sách"
+            value={updatedPromotion.books}
+            onChange={handleBooksChange}
+            style={{ width: '100%' }}
+          >
+            <Option key="select_all" value="select_all">
+              Chọn tất cả
+            </Option>
+            <Option key="deselect_all" value="deselect_all">
+              Bỏ chọn tất cả
+            </Option>
+            {books.map(book => (
+              <Option key={book._id} value={book._id}>
+                {book.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
         <Form.Item label="Hình ảnh">
           <Upload
             beforeUpload={(file) => {

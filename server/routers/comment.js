@@ -108,21 +108,21 @@ commentRouter.get("/:bookId/comments", async (req, res) => {
     const { bookId } = req.params;
 
     try {
-        const book = await Book.findById(bookId).populate({
-            path: 'comments',
-            match: { status: 1 },
-        });
+        const book = await Book.findById(bookId).populate('comments');
 
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
 
-        return res.json(book.comments);
+        const filteredComments = book.comments.filter(comment => comment.status === 1);
+
+        return res.json(filteredComments);
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching book and comments:', error);
         return res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // Thêm bình luận 
 commentRouter.post('/api/:bookId/comments', async (req, res) => {

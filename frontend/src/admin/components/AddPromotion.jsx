@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, message, Row, Col, Upload, Select, DatePicker } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Form, Input, Button, message, Row, Col, Upload, Select, DatePicker, Dropdown, Menu } from 'antd';
+import { UploadOutlined, DownOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
@@ -14,9 +14,24 @@ const AddPromotion = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imageName, setImageName] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [books, setBooks] = useState([]);
+  const [selectedBooks, setSelectedBooks] = useState([]);
 
   const UPLOAD_PRESET = 'yznfezyj';
   const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmcfhbwbb/image/upload';
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/products');
+        setBooks(response.data);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+        messageApi.error('Failed to fetch books.');
+      }
+    };
+    fetchBooks();
+  }, []);
 
   const handleAddPromotion = async (values) => {
     setUploading(true);
@@ -41,12 +56,13 @@ const AddPromotion = () => {
 
       const status = values.status === 'Hiển thị' ? 1 : 0;
 
-      const newPromotion = { ...values, image: imageUrl, status };
+      const newPromotion = { ...values, image: imageUrl, status, books: selectedBooks };
       await axios.post('http://localhost:5000/api/addpromotion', newPromotion);
       messageApi.success('Promotion added successfully');
       form.resetFields();
       setImageFile(null);
       setImageName('');
+      setSelectedBooks([]);
       navigate('/admin/dashboard/promotions');
     } catch (error) {
       console.error('Error adding promotion:', error);
@@ -63,7 +79,7 @@ const AddPromotion = () => {
     }
     setImageFile(file);
     setImageName(file.name);
-    return false; // Prevent auto upload by Ant Design
+    return false; 
   };
 
   const handleDateChange = (date, dateString) => {
@@ -73,6 +89,25 @@ const AddPromotion = () => {
       form.setFieldsValue({ end_day: '' });
     }
   };
+
+  const handleBooksChange = (values) => {
+    setSelectedBooks(values);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedBooks(books.map(book => book._id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedBooks([]);
+  };
+
+  const menu = (
+    <Menu>
+      <Menu.Item onClick={handleSelectAll}>Chọn tất cả</Menu.Item>
+      <Menu.Item onClick={handleDeselectAll}>Bỏ chọn tất cả</Menu.Item>
+    </Menu>
+  );
 
   return (
     <div className='max-w-4xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg'>
@@ -103,6 +138,7 @@ const AddPromotion = () => {
           <Select placeholder='Chọn loại'>
             <Option value='percent'>Giảm phần trăm</Option>
             <Option value='money'>Giảm tiền</Option>
+            <Option value='ship'>Miễn phí vận chuyển</Option>
           </Select>
         </Form.Item>
         <Form.Item label='Mã' name='code' rules={[{ required: true, message: 'Vui lòng nhập mã' }]}>
@@ -155,6 +191,26 @@ const AddPromotion = () => {
             </Form.Item>
           </Col>
         </Row>
+        <Form.Item label='Sách áp dụng'>
+          <Dropdown overlay={menu} trigger={['click']} placement="bottomRight">
+            <Button>
+              Chọn sách <DownOutlined />
+            </Button>
+          </Dropdown>
+          <Select
+            mode='multiple'
+            placeholder='Chọn sách'
+            value={selectedBooks}
+            onChange={handleBooksChange}
+            style={{ width: '100%', marginTop: 8 }}
+          >
+            {books.map(book => (
+              <Option key={book._id} value={book._id}>
+                {book.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
         <Form.Item>
           <Button type='primary' htmlType='submit' className='w-full' loading={uploading}>
             Thêm mã khuyến mãi

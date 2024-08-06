@@ -293,8 +293,10 @@ orderRouter.post('/api/orders', async (req, res) => {
         if (result.data.return_code === 1) {
           const newOrder = new Order({
             ...orderData,
+            orderToken: zaloPayOrder.app_trans_id,
             status: 5 
           });
+          console.log("New Order before saving:", newOrder);
           await newOrder.save();
           await SendMail.sendEmailCreateOrder(email,orderData);
           return res.status(201).json({ 
@@ -311,7 +313,10 @@ orderRouter.post('/api/orders', async (req, res) => {
         return res.status(500).json({ error: 'Lỗi khi gọi API ZaloPay.' });
       }
     } else {
-      const newOrder = new Order(orderData);
+      const newOrder = new Order({ 
+        ...orderData, 
+        orderToken: null 
+      });
       await newOrder.save();
       await SendMail.sendEmailCreateOrder(email,orderData);
       res.status(201).json(newOrder);
@@ -327,10 +332,10 @@ orderRouter.post('/api/orders-status/:app_trans_id', async (req, res) => {
   const app_trans_id = req.params.app_trans_id;
   let postData = {
     app_id: config.app_id,
-    app_trans_id: app_trans_id, // Input your app_trans_id
+    app_trans_id: app_trans_id, 
 }
 
-let data = postData.app_id + "|" + postData.app_trans_id + "|" + config.key1; // appid|app_trans_id|key1
+let data = postData.app_id + "|" + postData.app_trans_id + "|" + config.key1; 
 postData.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
 
 
@@ -353,53 +358,50 @@ axios(postConfig)
 
 });
 
-// Route to handle ZaloPay callback
+//calback
 orderRouter.post('/callback', async (req, res) => {
-   let result = {};
+  const result = {};
+  const dataStr = req.body.data;
+  const reqMac = req.body.mac;
 
-  try {
-    let dataStr = req.body.data;
-    let reqMac = req.body.mac;
-    let mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
-    console.log("mac =", mac);
+  const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
+  console.log("mac =", mac);
 
-    // kiểm tra callback hợp lệ (đến từ ZaloPay server)
-    if (reqMac !== mac) {
-      // callback không hợp lệ
-      result.return_code = -1;
-      result.return_message = "mac not equal";
-    }
-    else {
-      // thanh toán thành công
-      // merchant cập nhật trạng thái cho đơn hàng
-      let dataJson = JSON.parse(dataStr, config.key2);
-      console.log("update order's status = success where app_trans_id =", dataJson["app_trans_id"]);
-      const { order_token } = dataJson;
-      console.log(order_token)
+  if (reqMac !== mac) {
+    result.return_code = -1;
+    result.return_message = "mac not equal";
+  } else {
+    const dataJson = JSON.parse(dataStr);
+    console.log("Parsed dataJson =", dataJson);
+
+    const orderToken = dataJson.app_trans_id;
+    console.log("order_token =", orderToken);
+
+    // Find the order
+    const orderToUpdate = await Order.findOne({ orderToken: orderToken });
+    console.log("Order to update:", orderToUpdate);
+
+    if (!orderToUpdate) {
+      console.error('Order not found or failed to update:', orderToken);
+      result.return_code = 0;
+      result.return_message = 'Không tìm thấy đơn hàng để cập nhật trạng thái.';
+    } else {
+      // Update the order
       const updatedOrder = await Order.findOneAndUpdate(
-        { 'order_token': order_token },
-        { $set: { status: 0, description: 'Đơn hàng của bạn đã được thanh toán và đang được xử lý trong hệ thống.' } },
+        { orderToken: orderToken },
+        { $set: { status: 0, description: 'Đơn hàng đã được thanh toán.' } },
         { new: true }
       );
-      if (!updatedOrder) {
-        throw new Error('Không tìm thấy đơn hàng để cập nhật trạng thái.');
-      }
+      console.log("Order updated successfully:", updatedOrder);
       result.return_code = 1;
       result.return_message = "success";
-
     }
-  } catch (ex) {
-    result.return_code = 0; 
-    result.return_message = ex.message;
-    const { order_token  } = dataJson;
-    await Order.deleteOne({ 'order_token': order_token });
   }
-
-  // thông báo kết quả cho ZaloPay server
   res.json(result);
 });
 
-  
+
+//Lay don hang cua user co id
 orderRouter.get('/api/orders/me/:userId', async (req, res) => {
   try {
     const userId = req.params.userId; 
@@ -444,9 +446,5 @@ orderRouter.put('/order/:orderId/confirm', async (req, res) => {
   }
 });
 
-//Đặt lại đơn
-orderRouter.post('/reorder/:orderId', async (req, res) => {
-  
-});
 
 module.exports = orderRouter;

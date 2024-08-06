@@ -54,6 +54,8 @@ import ForgotPassword from "../authencation/ForgotPassword";
 import ResetPassword from "../authencation/ResetPassword";
 import ProtectedRouteUser from './ProtectedRouteUser'; 
 import Shop_By_Author from "../shop_by_category/Shop_By_Author";
+import Program from "../admin/components/Program";
+import AddProgram from "../admin/components/AddProgram";
 
 const router = createBrowserRouter([
   // User routes
@@ -131,6 +133,8 @@ const router = createBrowserRouter([
       { path: "request-return", element: <Request /> },
       { path: "book-receipt/view/:id", element: <ViewBookReceipt /> },
       { path: "book-receipt/edit/:id", element: <EditBookReceipt /> },
+      { path: "program", element: <Program /> },
+      { path: "addprogram", element: <AddProgram /> },
     ]
   }
 ]);

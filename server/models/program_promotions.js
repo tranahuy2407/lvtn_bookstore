@@ -13,6 +13,10 @@ try {
             type: String, 
             required: true
         },
+        status:{
+            type: Number, 
+            default: 1
+        },
         description: {
             type: String, 
             required: true
