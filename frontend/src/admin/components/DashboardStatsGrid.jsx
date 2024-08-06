@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IoBagHandle } from 'react-icons/io5';
+import { IoBagHandle, IoCartOutline, IoBookOutline } from 'react-icons/io5';
+import { FcManager, FcMenu } from "react-icons/fc";
 
 function DashboardStatsGrid() {
   const [categoryCount, setCategoryCount] = useState(0); 
@@ -14,7 +15,7 @@ function DashboardStatsGrid() {
           throw new Error('Failed to fetch category count');
         }
         const data = await response.json();
-        setCategoryCount(data.length); // Cập nhật state với số lượng thể loại từ API
+        setCategoryCount(data.length); 
       } catch (error) {
         console.error('Error fetching category count:', error);
       }
@@ -71,8 +72,8 @@ function DashboardStatsGrid() {
   return (
     <div className='flex gap-4 w-full'>
       <BoxWrapper>
-        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-500'>
-          <IoBagHandle className='text-2xl text-white' />
+        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-300'>
+          <IoCartOutline className='text-2xl text-white' />
         </div>
         <div className='pl-4'>
           <span className='text-sm text-gray-500 font-light'>Đơn đặt hàng</span>
@@ -82,8 +83,8 @@ function DashboardStatsGrid() {
         </div>
       </BoxWrapper>
       <BoxWrapper>
-        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-500'>
-          <IoBagHandle className='text-2xl text-white' />
+        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-300'>
+          <IoBookOutline className='text-2xl text-white' />
         </div>
         <div className='pl-4'>
           <span className='text-sm text-gray-500 font-light'>Sản phẩm</span>
@@ -93,8 +94,8 @@ function DashboardStatsGrid() {
         </div>
       </BoxWrapper>
       <BoxWrapper>
-        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-500'>
-          <IoBagHandle className='text-2xl text-white' />
+        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-300'>
+          <FcMenu className='text-2xl text-white' />
         </div>
         <div className='pl-4'>
           <span className='text-sm text-gray-500 font-light'>Thể loại</span>
@@ -104,8 +105,8 @@ function DashboardStatsGrid() {
         </div>
       </BoxWrapper>
       <BoxWrapper>
-        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-500'>
-          <IoBagHandle className='text-2xl text-white' />
+        <div className='rounded-full h-12 w-12 flex items-center justify-center bg-sky-300'>
+          <FcManager className='text-2xl text-white' />
         </div>
         <div className='pl-4'>
           <span className='text-sm text-gray-500 font-light'>Nhà xuất bản</span>

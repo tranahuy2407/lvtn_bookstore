@@ -9,50 +9,72 @@ import {
 	HiOutlineQuestionMarkCircle,
 	HiOutlineCog
 } from 'react-icons/hi'
+import { 
+	FcShop,
+	FcBusinessman,
+	FcManager,
+	FcHome,
+	FcComments,
+	FcDocument,
+	FcAutomotive,
+	FcBarChart,
+	FcInTransit ,
+	FcNews,
+	FcMenu,
+	FcBookmark,
+	FcRedo,
+	FcAdvertising,
+	FcList,
+	FcPlus,
+	FcPortraitMode,
+} from "react-icons/fc";
+import { MdShoppingCartCheckout } from "react-icons/md";
+
+import { FaBook } from "react-icons/fa";
 
 export const DASHBOARD_SIDEBAR_LINKS = [
 	{
 		key: 'dashboard',
 		label: 'Bảng thống kê',
 		path: '/admin/dashboard',
-		icon: <HiOutlineViewGrid />
+		icon: <FcBarChart />
 	},
 	
 	{
 		key: 'manageproducts',
 		label: 'Sản phẩm',
-		icon: <HiOutlineCube />,
+		icon: <FcBookmark />,
 		children: [
 			{
 				key: 'products',
 				label: 'Danh sách sản phẩm',
 				path: '/admin/dashboard/products',
-				icon: <HiOutlineCube />
+				icon: <FcList />
 			},
 			{
 				key: 'addproducts',
 				label: 'Thêm sản phẩm',
 				path: '/admin/dashboard/add-product',
-				icon: <HiOutlineCube />
+				icon: <FcPlus />
 			}
 		],
 	},
 	{
 		key: 'managecategories',
 		label: 'Thể loại',
-		icon: <HiOutlineCube />,
+		icon: <FcMenu />,
 		children: [
 			{
 				key: 'categories',
 				label: 'Danh sách thể loại',
 				path: '/admin/dashboard/categories',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			{
 				key: 'addcategories',
 				label: 'Thêm thể loại',
 				path: '/admin/dashboard/addcategories',
-				icon: <HiOutlineDocumentText />
+				icon: <FcPlus />
 			},
 		],
 	},
@@ -60,19 +82,19 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 	{
 		key: 'managepublishers',
 		label: 'Nhà xuất bản',
-		icon: <HiOutlineCube />,
+		icon: <FcManager />,
 		children: [
 			{
 				key: 'publishers',
 				label: 'Danh sách nhà xuất bản',
 				path: '/admin/dashboard/publishers',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			{
 				key: 'addpublishers',
 				label: 'Thêm nhà xuất bản',
 				path: '/admin/dashboard/addpublishers',
-				icon: <HiOutlineDocumentText />
+				icon: <FcPlus />
 			},
 		]
 	},
@@ -80,19 +102,19 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 	{
 		key: 'manageauthor',
 		label: 'Tác giả',
-		icon: <HiOutlineCube />,
+		icon: <FcBusinessman />,
 		children: [
 			{
 				key: 'publishers',
 				label: 'Danh sách tác giả',
 				path: '/admin/dashboard/authors',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			{
 				key: 'addpublishers',
 				label: 'Thêm tác giả',
 				path: '/admin/dashboard/addauthors',
-				icon: <HiOutlineDocumentText />
+				icon: <FcPlus />
 			},
 		]
 	},
@@ -100,14 +122,14 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 	{
 		key: 'manageorder',
 		label: 'Quản lí đơn hàng',
-		icon: <HiOutlineCube />,
+		icon: <FcInTransit />,
 		children: [
 			
 			{
 				key: 'orders',
 				label: 'Danh sách đơn hàng',
 				path: '/admin/dashboard/orders',
-				icon: <HiOutlineShoppingCart />
+				icon: <FcAutomotive />
 			},
 		]
 	},
@@ -115,48 +137,48 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 	{
 		key: 'manageopromotion',
 		label: 'Quản lí khuyến mãi',
-		icon: <HiOutlineCube />,
+		icon: <FcAdvertising />,
 		children: [
 			
 			{
 				key: 'promotions',
 				label: 'Danh sách khuyến mãi',
 				path: '/admin/dashboard/promotions',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			{
 				key: 'addpromotion',
 				label: 'Thêm mã khuyến mãi',
 				path: '/admin/dashboard/addpromotion',
-				icon: <HiOutlineDocumentText />
+				icon: <FcPlus />
 			},
 		]
 	},
 	{
 		key: 'managecomment',
 		label: 'Quản lý bình luận',
-		icon: <HiOutlineCube />,
+		icon: <FcComments />,
 		children: [
 			
 			{
 				key: 'comments',
 				label: 'Danh sách bình luận',
 				path: '/admin/dashboard/comments',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 		]
 	},
 	{
 		key: 'managenew',
 		label: 'Quản lý tin tức',
-		icon: <HiOutlineCube />,
+		icon: <FcNews />,
 		children: [
 			
 			{
 				key: 'new',
 				label: 'Danh sách tin tức',
 				path: '/admin/dashboard/news',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			
 		]
@@ -164,40 +186,40 @@ export const DASHBOARD_SIDEBAR_LINKS = [
 	{
 		key: 'managebookreceipt',
 		label: 'Quản lý nhập hàng',
-		icon: <HiOutlineCube />,
+		icon: <FcShop />,
 		children: [
 			
 			{
 				key: 'bookreceipts',
 				label: 'Nhập hàng',
 				path: '/admin/dashboard/bookreceipts',
-				icon: <HiOutlineDocumentText />
+				icon: <FcPlus />
 			},
 			{
 				key: 'categories-bookreceipt',
 				label: 'Quản lý phiếu nhập',
 				path: '/admin/dashboard/categories-bookreceipt',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			{
 				key: 'supplier',
 				label: 'Quản lý nhà cung cấp',
 				path: '/admin/dashboard/suppliers',
-				icon: <HiOutlineDocumentText />
+				icon: <FcPortraitMode />
 			},
 		]
 	},
 	{
 		key: 'managerequest-return',
 		label: 'Quản lý đổi trả',
-		icon: <HiOutlineCube />,
+		icon: <FcRedo />,
 		children: [
 			
 			{
 				key: 'request-return',
 				label: 'Danh sách yêu cầu',
 				path: '/admin/dashboard/request-return',
-				icon: <HiOutlineDocumentText />
+				icon: <FcList />
 			},
 			
 		]
