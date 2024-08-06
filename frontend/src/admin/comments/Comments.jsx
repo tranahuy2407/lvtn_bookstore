@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../authencation/AuthContext';
+import { Table, Button, Modal } from 'antd';
 
 const Comments = () => {
   const [books, setBooks] = useState([]);
@@ -7,8 +8,11 @@ const Comments = () => {
   const [error, setError] = useState(null);
   const [userNames, setUserNames] = useState({});
   const { admin } = useAuth();
+  const [selectedBook, setSelectedBook] = useState(null);
   const [replyingCommentId, setReplyingCommentId] = useState(null);
   const [replyContent, setReplyContent] = useState("");
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [replyModalVisible, setReplyModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -65,7 +69,7 @@ const Comments = () => {
 
   const handleReplyClick = (commentId) => {
     setReplyingCommentId(commentId);
-    console.log('Replying to commentId:', commentId); // Log commentId directly
+    setReplyModalVisible(true); // Mở modal trả lời khi nhấn nút trả lời
   };
 
   const handleReplySubmit = async (commentId, bookId) => {
@@ -78,7 +82,7 @@ const Comments = () => {
           },
           body: JSON.stringify({ reply: replyContent, adminId: admin?._id }),
         });
-  
+
         if (response.ok) {
           const updatedBooks = books.map(book => {
             if (book._id === bookId) {
@@ -101,6 +105,7 @@ const Comments = () => {
           setBooks(updatedBooks);
           setReplyingCommentId(null);
           setReplyContent("");
+          setReplyModalVisible(false); // Đóng modal trả lời sau khi gửi
         } else {
           console.error('Có lỗi xảy ra khi trả lời bình luận.');
         }
@@ -109,7 +114,86 @@ const Comments = () => {
       }
     }
   };
-  
+
+  const handleDetailClick = (book) => {
+    setSelectedBook(book);
+    setDetailsModalVisible(true);
+  };
+
+  const handleModalCancel = () => {
+    setDetailsModalVisible(false);
+    setSelectedBook(null);
+  };
+
+  const handleReplyModalCancel = () => {
+    setReplyModalVisible(false);
+    setReplyContent("");
+  };
+
+  const bookColumns = [
+    {
+      title: 'Hình Ảnh',
+      dataIndex: 'images',
+      key: 'images',
+      render: (text) => <img src={text} alt="Book cover" style={{ width: 100, height: 150, objectFit: 'cover' }} />,
+    },
+    {
+      title: 'Tên Sách',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Chi Tiết',
+      key: 'action',
+      render: (text, record) => (
+        <Button onClick={() => handleDetailClick(record)} type="primary">
+          Xem chi tiết
+        </Button>
+      ),
+    },
+  ];
+
+  const commentColumns = [
+    {
+      title: 'Người dùng',
+      key: 'user',
+      render: (text, record) => (
+        <span>{userNames[record.userId?._id.toString()] || 'Người dùng không xác định'}</span>
+      ),
+    },
+    {
+      title: 'Bình luận',
+      dataIndex: 'comments',
+      key: 'comments',
+    },
+    {
+      title: 'Trả lời',
+      dataIndex: 'reply',
+      key: 'reply',
+      render: (text) => text || 'Chưa có trả lời',
+    },
+    {
+      title: 'Trạng thái',
+      key: 'status',
+      render: (text, record) => (
+        <span>{record.reply ? 'Đã trả lời' : 'Chưa trả lời'}</span>
+      ),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      render: (text, record) => (
+        <>
+          <Button
+            onClick={() => handleReplyClick(record._id)}
+            className="text-blue-500"
+          >
+            Trả lời
+          </Button>
+        </>
+      ),
+    },
+  ];
 
   if (loading) return <div>Đang tải...</div>;
   if (error) return <div>{error}</div>;
@@ -117,71 +201,51 @@ const Comments = () => {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Danh sách sách có bình luận</h2>
-      {books.length === 0 ? (
-        <p>Không có sách nào có bình luận.</p>
-      ) : (
-        books.map((book) => (
-          <div key={book._id} className="flex border border-gray-200 p-4 mb-4 rounded-lg">
-            <div className="w-1/3 pr-4">
-              <img src={book.images} alt={book.name} className="w-full h-auto object-cover rounded-lg" />
-            </div>
-            <div className="w-2/3">
-              <h3 className="text-xl font-semibold mb-2">{book.name}</h3>
-              <div className="mb-4">
-                <h4 className="text-lg font-medium mb-2">Bình luận</h4>
-                {book.comments.length === 0 ? (
-                  <p>Không có bình luận nào.</p>
-                ) : (
-                  book.comments.map((comment) => (
-                    <div key={comment._id} className="border-b border-gray-300 pb-2 mb-2">
-                      <p><strong>{userNames[comment.userId?._id.toString()] || 'Người dùng không xác định'}:</strong> {comment.comments}</p>
-                      {comment.reply && (
-                        <div className="ml-4 text-gray-600">
-                          <p>{comment.reply}</p>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => handleReplyClick(comment._id)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        Reply
-                      </button>
-                      {replyingCommentId === comment._id && (
-                        <div className="mt-2">
-                          <textarea
-                            value={replyContent}
-                            onChange={(e) => setReplyContent(e.target.value)}
-                            className="w-full p-2 border rounded-lg"
-                            rows="3"
-                            placeholder="Viết trả lời của bạn..."
-                          ></textarea>
-                         <button
-                          onClick={() => handleReplySubmit(comment._id, book._id)} 
-                          className="mt-2 bg-blue-500 text-white p-2 rounded-lg"
-                        >
-                          Gửi
-                        </button>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-              <div>
-                <h4 className="text-lg font-medium mb-2">Đánh giá</h4>
-                {book.ratings.length === 0 ? (
-                  <p>Chưa có đánh giá nào.</p>
-                ) : (
-                  book.ratings.map((rating) => (
-                    <div key={rating._id} className="border-b border-gray-300 pb-2 mb-2">
-                      <p><strong>{userNames[rating.userId?._id.toString()] || 'Người dùng không xác định'}:</strong> {rating.rating} sao</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        ))
+      <Table
+        dataSource={books}
+        columns={bookColumns}
+        rowKey="_id"
+        pagination={false}
+      />
+      {selectedBook && (
+        <Modal
+          title={selectedBook.name}
+          visible={detailsModalVisible}
+          onCancel={handleModalCancel}
+          footer={null}
+          width={1000} // Thay đổi kích thước của modal
+        >
+          <h4 className="text-lg font-medium mb-2">Bình luận</h4>
+          <Table
+            dataSource={selectedBook.comments}
+            columns={commentColumns}
+            rowKey="_id"
+            pagination={false}
+          />
+        </Modal>
+      )}
+      {replyModalVisible && (
+        <Modal
+          title="Trả lời bình luận"
+          visible={replyModalVisible}
+          onCancel={handleReplyModalCancel}
+          footer={null}
+        >
+          <h4 className="text-lg font-medium mb-2">Nhập trả lời</h4>
+          <textarea
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+            className="w-full p-2 border rounded-lg"
+            rows="3"
+            placeholder="Viết trả lời của bạn..."
+          ></textarea>
+          <Button
+            onClick={() => handleReplySubmit(replyingCommentId, selectedBook._id)}
+            className="mt-2 bg-blue-500 text-white"
+          >
+            Gửi
+          </Button>
+        </Modal>
       )}
     </div>
   );

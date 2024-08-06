@@ -219,25 +219,31 @@ commentRouter.get('/api/books-with-comments', async (req, res) => {
   });
 
   //thay đổi trạng thái bình luận
-  commentRouter.patch('/:bookId/:commentId/hide', async (req, res) => {
-    const { commentId } = req.params;
-    const { bookId } = req.params;
+  commentRouter.put('/books/:bookId/comments/:commentId/status', async (req, res) => {
+    const { bookId, commentId } = req.params;
+    const { status } = req.body;
+  
+    if (typeof status !== 'number' || ![0, 1].includes(status)) {
+      return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
+    }
   
     try {
-      const comment = await Comment.findById(commentId);
-      
-      if (!comment) {
-        return res.status(404).json({ message: 'Bình luận không tìm thấy' });
-      }
-      
-      comment.status = comment.status === 0 ? 1 : 0;
-      await comment.save();
+      // Tìm sách theo ID và cập nhật trạng thái của bình luận trong sách
+      const book = await Book.findOneAndUpdate(
+        { _id: bookId, 'comments._id': commentId },
+        { $set: { 'comments.$.status': status } },
+        { new: true }
+      );
   
-      res.status(200).json({ message: 'Cập nhật trạng thái bình luận thành công', comment });
+      if (!book) {
+        return res.status(404).json({ message: 'Không tìm thấy sách hoặc bình luận' });
+      }
+  
+      res.json(book);
     } catch (error) {
       console.error('Có lỗi xảy ra:', error);
-      res.status(500).json({ message: 'Có lỗi xảy ra khi cập nhật trạng thái bình luận' });
+      res.status(500).json({ message: 'Có lỗi xảy ra' });
     }
   });
-  
+
 module.exports = commentRouter;
