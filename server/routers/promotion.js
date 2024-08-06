@@ -42,7 +42,7 @@ promotionRouter.get("/promotion/books", async (req, res) => {
 //lấy tát cả chương trình giảm giá
 promotionRouter.get("/api/promotions", async (req, res) => {
   try {
-    const promotions = await Promotion.find();
+    const promotions = await Promotion.find().populate('books');
     res.status(200).json({ promotions });
   } catch (error) {
     console.error("Error fetching promotions:", error.message);
@@ -80,7 +80,8 @@ promotionRouter.post("/api/addpromotion", async (req, res) => {
       conditional,
       limit,
       start_day,
-      end_day
+      end_day,
+      books
   } = req.body;
 
   try {
@@ -94,7 +95,8 @@ promotionRouter.post("/api/addpromotion", async (req, res) => {
           conditional,
           limit,
           start_day,
-          end_day
+          end_day,
+          books
       });
 
       await newPromotion.save();
