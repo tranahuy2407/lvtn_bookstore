@@ -217,5 +217,27 @@ commentRouter.get('/api/books-with-comments', async (req, res) => {
       res.status(500).json({ message: 'Có lỗi xảy ra khi trả lời bình luận' });
     }
   });
+
+  //thay đổi trạng thái bình luận
+  commentRouter.patch('/:bookId/:commentId/hide', async (req, res) => {
+    const { commentId } = req.params;
+    const { bookId } = req.params;
+  
+    try {
+      const comment = await Comment.findById(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ message: 'Bình luận không tìm thấy' });
+      }
+      
+      comment.status = comment.status === 0 ? 1 : 0;
+      await comment.save();
+  
+      res.status(200).json({ message: 'Cập nhật trạng thái bình luận thành công', comment });
+    } catch (error) {
+      console.error('Có lỗi xảy ra:', error);
+      res.status(500).json({ message: 'Có lỗi xảy ra khi cập nhật trạng thái bình luận' });
+    }
+  });
   
 module.exports = commentRouter;
