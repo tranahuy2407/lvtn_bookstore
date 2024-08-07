@@ -219,7 +219,7 @@ commentRouter.get('/api/books-with-comments', async (req, res) => {
   });
 
   //thay đổi trạng thái bình luận
-  commentRouter.put('/books/:bookId/comments/:commentId/status', async (req, res) => {
+  commentRouter.put('/api/books/:bookId/comments/:commentId/status', async (req, res) => {
     const { bookId, commentId } = req.params;
     const { status } = req.body;
   
@@ -228,7 +228,7 @@ commentRouter.get('/api/books-with-comments', async (req, res) => {
     }
   
     try {
-      // Tìm sách theo ID và cập nhật trạng thái của bình luận trong sách
+      
       const book = await Book.findOneAndUpdate(
         { _id: bookId, 'comments._id': commentId },
         { $set: { 'comments.$.status': status } },

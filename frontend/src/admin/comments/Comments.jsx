@@ -130,6 +130,42 @@ const Comments = () => {
     setReplyContent("");
   };
 
+  const handleChangeStatus = async (commentId, bookId, newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/books/${bookId}/comments/${commentId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        const updatedBooks = books.map(book => {
+          if (book._id === bookId) {
+            const updatedComments = book.comments.map(comment => {
+              if (comment._id === commentId) {
+                return { ...comment, status: newStatus };
+              }
+              return comment;
+            });
+            // Cập nhật selectedBook nếu nó là sách hiện tại
+            if (selectedBook && selectedBook._id === bookId) {
+              setSelectedBook({ ...book, comments: updatedComments });
+            }
+            return { ...book, comments: updatedComments };
+          }
+          return book;
+        });
+        setBooks(updatedBooks);
+      } else {
+        console.error('Có lỗi xảy ra khi thay đổi trạng thái.');
+      }
+    } catch (error) {
+      console.error('Có lỗi xảy ra khi gửi yêu cầu thay đổi trạng thái:', error);
+    }
+  };
+
   const bookColumns = [
     {
       title: 'Hình Ảnh',
@@ -176,7 +212,7 @@ const Comments = () => {
       title: 'Trạng thái',
       key: 'status',
       render: (text, record) => (
-        <span>{record.reply ? 'Đã trả lời' : 'Chưa trả lời'}</span>
+        <span>{record.status === 1 ? 'Hiện' : 'Ẩn'}</span>
       ),
     },
     {
@@ -189,6 +225,12 @@ const Comments = () => {
             className="text-blue-500"
           >
             Trả lời
+          </Button>
+          <Button
+            onClick={() => handleChangeStatus(record._id, selectedBook._id, record.status === 1 ? 0 : 1)}
+            className="ml-2"
+          >
+            {record.status === 1 ? 'Ẩn' : 'Hiện'}
           </Button>
         </>
       ),
