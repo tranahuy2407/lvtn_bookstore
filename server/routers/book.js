@@ -144,16 +144,17 @@ bookRouter.get('/api/best-sellers', async (req, res) => {
 bookRouter.get("/api/related-books/:bookId", async (req, res) => {
   try {
     const bookId = req.params.bookId;
-    const book = await Book.findById(bookId);
+    const book = await Book.findById(bookId).populate('author categories');
     if (!book) {
       return res.status(404).json({ error: "Book not found" });
     }
-    const categoryIds = book.categories.map(category => new ObjectId(category.$oid || category));
+    
+    const categoryIds = book.categories.map(category => new mongoose.Types.ObjectId(category));
     const relatedBooks = await Book.find({
-      _id: { $ne: new ObjectId(bookId) }, 
+      _id: { $ne: new mongoose.Types.ObjectId(bookId) }, 
       categories: { $in: categoryIds }, 
-      author: { $ne: book.author }
-    }).populate('author categories'); 
+      author: { $ne: book.author._id }
+    }).populate('author categories');
 
     res.json(relatedBooks);
   } catch (error) {
@@ -161,7 +162,6 @@ bookRouter.get("/api/related-books/:bookId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 //Lấy sách của tác giả
 bookRouter.get('/books/by-author/:authorId', async (req, res) => {
   try {
@@ -218,6 +218,7 @@ bookRouter.get('/api/books/interested', async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
+
     const recent = await Recent.findOne({ userId });
 
     if (!recent) {
@@ -230,7 +231,8 @@ bookRouter.get('/api/books/interested', async (req, res) => {
 
     const filteredBooks = sortedBooks.filter(entry => entry._id.toString() !== currentBookId);
 
-    const books = await Book.find({ '_id': { $in: filteredBooks.map(b => b._id) } });
+    const books = await Book.find({ '_id': { $in: filteredBooks.map(b => b._id) } })
+      .populate('author categories');  
 
     const resultBooks = filteredBooks.map(entry => {
       const book = books.find(b => b._id.toString() === entry._id.toString());
@@ -243,6 +245,7 @@ bookRouter.get('/api/books/interested', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 module.exports = bookRouter;

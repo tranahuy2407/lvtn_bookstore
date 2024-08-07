@@ -43,7 +43,6 @@ const Programs = () => {
     setSelectedProgram(program);
     setIsModalVisible(true);
   };
-  
 
   const handleDelete = async () => {
     try {
@@ -153,23 +152,21 @@ const Programs = () => {
       </table>
 
       <Modal
-          title="Chỉnh sửa chương trình"
-          visible={isModalVisible}
-          onCancel={handleModalClose}
-          footer={null}
-          width={900}
-        >
-          {selectedProgram && (
-            <EditProgramForm
-              program={selectedProgram}
-              onClose={handleModalClose}
-              onUpdateProgram={handleUpdateProgram}
-            />
-          )}
-        </Modal>
+        title="Chỉnh sửa chương trình"
+        visible={isModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={900}
+      >
+        {selectedProgram && (
+          <EditProgramForm
+            program={selectedProgram}
+            onClose={handleModalClose}
+            onUpdateProgram={handleUpdateProgram}
+          />
+        )}
+      </Modal>
 
-
-      {/* Delete Confirmation Modal */}
       <Modal
         title="Xác nhận xóa"
         visible={isDeleteModalVisible}
@@ -181,13 +178,12 @@ const Programs = () => {
         <p>Bạn có chắc chắn muốn xóa chương trình này không?</p>
       </Modal>
 
-      {/* Promotions Modal */}
       <Modal
         title="Danh sách khuyến mãi"
         visible={isPromotionsModalVisible}
         onCancel={handlePromotionsModalClose}
         footer={null}
-        width={900} // Adjusted modal width
+        width={900}
       >
         <table className="w-full border-collapse border border-gray-300">
           <thead>
@@ -198,9 +194,6 @@ const Programs = () => {
               <th className="border border-gray-300 py-2 px-4 text-center">Loại</th>
               <th className="border border-gray-300 py-2 px-4 text-center">Mã</th>
               <th className="border border-gray-300 py-2 px-4 text-center">Giá trị</th>
-              <th className="border border-gray-300 py-2 px-4 text-center">Ngày bắt đầu</th>
-              <th className="border border-gray-300 py-2 px-4 text-center">Ngày kết thúc</th>
-              <th className="border border-gray-300 py-2 px-4 text-center">Điều kiện</th>
             </tr>
           </thead>
           <tbody>
@@ -211,14 +204,9 @@ const Programs = () => {
                   <img src={promo.image} alt={promo.description} className="w-20 h-20 object-cover mx-auto" />
                 </td>
                 <td className="border border-gray-300 py-2 px-4 text-center">{promo.description}</td>
-                <td className="border border-gray-300 py-2 px-4 text-center">
-                  {promo.type === 'money' ? 'Tiền mặt' : promo.type === 'percent' ? 'Phần trăm' : 'Giao hàng miễn phí'}
-                </td>
+                <td className="border border-gray-300 py-2 px-4 text-center">{promo.type}</td>
                 <td className="border border-gray-300 py-2 px-4 text-center">{promo.code}</td>
                 <td className="border border-gray-300 py-2 px-4 text-center">{promo.value}</td>
-                <td className="border border-gray-300 py-2 px-4 text-center">{new Date(promo.start_day).toLocaleDateString()}</td>
-                <td className="border border-gray-300 py-2 px-4 text-center">{new Date(promo.end_day).toLocaleDateString()}</td>
-                <td className="border border-gray-300 py-2 px-4 text-center">{promo.conditional}</td>
               </tr>
             ))}
           </tbody>

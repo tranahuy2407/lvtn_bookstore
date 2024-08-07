@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -7,37 +7,6 @@ import { Link } from 'react-router-dom';
 import { FaCartShopping } from 'react-icons/fa6';
 
 const BookCard = ({ headline, books }) => {
-  const [authorNames, setAuthorNames] = useState({});
-  
-  useEffect(() => {
-    const fetchAuthors = async () => {
-      const fetchedAuthors = {};
-      for (const book of books) {
-        const authorId = book.author?._id || book.author; 
-        
-        if (authorId) {
-          try {
-            const response = await fetch(`http://localhost:5000/author/${authorId}`);
-            if (response.ok) {
-              const data = await response.json();
-              fetchedAuthors[authorId] = data.name;
-            } else {
-              fetchedAuthors[authorId] = 'Unknown Author';
-            }
-          } catch (error) {
-            console.error("Lỗi:", error);
-            fetchedAuthors[authorId] = 'Unknown Author';
-          }
-        } else {
-          fetchedAuthors[authorId] = 'Unknown Author';
-        }
-      }
-      setAuthorNames(fetchedAuthors);
-    };
-
-    fetchAuthors();
-  }, [books]);
-
   return (
     <div className='my-16 px-4 lg:px-24'>
       <h2 className='text-5xl text-center font-bold text-black my-5'>{headline}</h2>
@@ -84,7 +53,7 @@ const BookCard = ({ headline, books }) => {
                 <div className='flex flex-col items-center text-center mt-4'>
                   <h3 className='text-lg font-semibold'>{book.name}</h3>
                   <p className='text-gray-500 italic'> 
-                    {authorNames[book.author?._id || book.author] || "Loading..."} 
+                    {book.author[0]?.name || "Loading..."} 
                   </p>
                 </div>
                 <div className='text-center mt-2'>

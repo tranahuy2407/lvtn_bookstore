@@ -1,194 +1,167 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Input, Button, Upload, message, Select, DatePicker, InputNumber } from 'antd';
+import { Form, Input, Button, Upload, message, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-
 const { Option } = Select;
 
-const EditProgramForm = ({ programId, onClose, onUpdateProgram }) => {
-  const UPLOAD_PRESET = "yznfezyj";
-  const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmcfhbwbb/upload";
-
-  const [form] = Form.useForm();
-  const [messageApi, contextHolder] = message.useMessage();
-  const [imageFile, setImageFile] = useState(null);
-  const [imageName, setImageName] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [program, setProgram] = useState(null);
-  const [selectedPromotions, setSelectedPromotions] = useState([]);
+const EditProgramForm = ({ program, onClose, onUpdateProgram }) => {
+  const [form] = Form.useForm(); 
+  const [image, setImage] = useState(program.image);
+  const [promotions, setPromotions] = useState([]);
+  const [selectedPromotions, setSelectedPromotions] = useState(program.promotions.map(promo => promo._id) || []);
   const [uploading, setUploading] = useState(false);
 
+  const UPLOAD_PRESET = 'yznfezyj';
+  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmcfhbwbb/image/upload';
+
   useEffect(() => {
-    const fetchProgramData = async () => {
-      if (!programId) {
-        messageApi.error('Chương trình không tìm thấy.');
-        return;
-      }
-      try {
-        const response = await axios.get(`http://localhost:5000/programs/${programId}`);
-        const programData = response.data;
-        setProgram(programData);
-        form.setFieldsValue({
-          name: programData.name,
-          description: programData.description,
-          status: programData.status,
-          promotions: programData.promotions.map(promo => promo._id),
-        });
-        setSelectedPromotions(programData.promotions.map(promo => promo._id));
-        setImageUrl(programData.image || '');
-        if (programData.image) {
-          setImageName(programData.image.split('/').pop());
-        }
-      } catch (error) {
-        console.error('Error fetching program data:', error);
-        messageApi.error(`Failed to fetch program data: ${error.response ? error.response.data.message : error.message}`);
-      }
-    };
+    form.setFieldsValue({
+      name: program.name,
+      description: program.description,
+      status: program.status,
+      promotions: selectedPromotions 
+    });
+    setImage(program.image);
+    fetchPromotions();
+  }, [program, form, selectedPromotions]);
 
-    fetchProgramData();
-  }, [programId]);
+  const fetchPromotions = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/promotions');
+      setPromotions(response.data.promotions);
+    } catch (error) {
+      console.error('Error fetching promotions:', error);
+      message.error('Failed to fetch promotions.');
+    }
+  };
 
-  const handleUpdateProgram = async (values) => {
+  const handleFinish = async (values) => {
     setUploading(true);
     try {
-      let uploadedImageUrl = imageUrl;
-
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', UPLOAD_PRESET);
-        formData.append('folder', 'Chương trình khuyến mãi');
-
-        const response = await axios.post(CLOUDINARY_URL, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        uploadedImageUrl = response.data.secure_url;
-      }
-
-      const updatedProgram = {
-        ...values,
-        image: uploadedImageUrl,
-        promotions: selectedPromotions,
+      const updatedProgram = { 
+        ...values, 
+        image, 
+        promotions: selectedPromotions
       };
-
-      await axios.put(`http://localhost:5000/programs/${programId}`, updatedProgram);
-
-      messageApi.success('Chương trình đã được cập nhật thành công');
+      await axios.put(`http://localhost:5000/api/updateprogram/${program._id}`, updatedProgram);
+      message.success('Chương trình đã được cập nhật thành công');
       onUpdateProgram(updatedProgram);
       onClose();
     } catch (error) {
       console.error('Error updating program:', error);
-      messageApi.error('Không thể cập nhật chương trình.');
+      message.error('Lỗi khi cập nhật chương trình');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleUploadImage = (file) => {
-    if (!file.type.startsWith('image/')) {
-      messageApi.error('Bạn chỉ có thể tải lên tệp hình ảnh!');
-      return false;
+  const handleImageChange = async ({ file }) => {
+    if (file.status === 'done') {
+      setImage(file.response.url);
+    } else if (file.status === 'error') {
+      message.error('Failed to upload image.');
     }
-    setImageFile(file);
-    setImageName(file.name);
-    return false;
   };
 
-  const handleEditorChange = (event, editor) => {
-    const data = editor.getData();
-    form.setFieldsValue({ description: data });
-  };
-
-  const handleSelectChange = (value) => {
-    setSelectedPromotions(value);
-  };
-
-  const handleBooksChange = (values) => {
-    form.setFieldsValue({ books: values });
+  const handleUploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', 'Chương trình khuyến mãi');
+    
+    try {
+      const response = await axios.post(CLOUDINARY_URL, formData, { 
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setImage(response.data.secure_url);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      message.error('Failed to upload image.');
+    }
+    return false; 
   };
 
   return (
-    <div className='max-w-4xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg'>
-      {contextHolder}
-      <h2 className='text-2xl font-bold mb-6 text-center text-gray-800'>Chỉnh sửa chương trình khuyến mãi</h2>
-      <Form form={form} onFinish={handleUpdateProgram} layout='vertical'>
-        <Form.Item label='Tên' name='name' rules={[{ required: true, message: 'Vui lòng nhập tên' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label='Mô tả'
-          name='description'
-          rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+    <Form form={form} layout="vertical" onFinish={handleFinish}> 
+      <Form.Item
+        name="name"
+        label="Tên chương trình"
+        rules={[{ required: true, message: 'Vui lòng nhập tên chương trình!' }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        name="description"
+        label="Mô tả"
+        rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
+      >
+        <div className="ckeditor-container">
+          <CKEditor
+            editor={ClassicEditor}
+            config={{
+              toolbar: [
+                'undo', 'redo', '|',
+                'heading', '|', 'bold', 'italic', '|',
+                'link', 'insertTable', 'mediaEmbed', '|',
+                'bulletedList', 'numberedList', 'indent', 'outdent'
+              ],
+            }}
+            data={form.getFieldValue('description') || '<p>Nhập mô tả tại đây...</p>'}
+            onChange={(event, editor) => {
+              const data = editor.getData();
+              form.setFieldsValue({ description: data });
+            }}
+          />
+        </div>
+      </Form.Item>
+      <Form.Item
+        name="status"
+        label="Trạng thái"
+        rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
+      >
+        <Select>
+          <Option value={1}>Hiển thị</Option>
+          <Option value={0}>Ẩn</Option>
+        </Select>
+      </Form.Item>
+      <Form.Item label="Mã khuyến mãi" name="promotions">
+        <Select
+          mode="multiple"
+          placeholder="Chọn mã khuyến mãi"
+          className="w-full"
+          onChange={(value) => setSelectedPromotions(value)}
+          value={selectedPromotions}
         >
-          <div className="ckeditor-container">
-            <CKEditor
-              editor={ClassicEditor}
-              config={{
-                toolbar: [
-                  'undo', 'redo', '|',
-                  'heading', '|', 'bold', 'italic', '|',
-                  'link', 'insertTable', 'mediaEmbed', '|',
-                  'bulletedList', 'numberedList', 'indent', 'outdent'
-                ],
-              }}
-              data={form.getFieldValue('description')}
-              onChange={handleEditorChange}
-            />
-          </div>
-        </Form.Item>
-        <Form.Item label='Trạng thái' name='status' rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}>
-          <Select placeholder='Chọn trạng thái'>
-            <Option value={1}>Kích hoạt</Option>
-            <Option value={0}>Không kích hoạt</Option>
-          </Select>
-        </Form.Item>
-        <Form.Item label='Khuyến mãi' name='promotions'>
-          <Select
-            mode='multiple'
-            placeholder='Chọn khuyến mãi'
-            className='w-full'
-            onChange={handleSelectChange}
-            value={selectedPromotions}
-          >
-            {program?.promotions.length > 0 ? (
-              program.promotions.map(promo => (
-                <Option key={promo._id} value={promo._id}>
-                  {promo.description}
-                </Option>
-              ))
-            ) : (
-              <Option disabled>Không có khuyến mãi</Option>
-            )}
-          </Select>
-        </Form.Item>
-        <Form.Item label='Hình ảnh' name='image'>
-          <Upload
-            beforeUpload={handleUploadImage}
-            showUploadList={false}
-            maxCount={1}
-            className='mt-1 block w-full'
-          >
-            <Button icon={<UploadOutlined />}>Tải lên hình ảnh</Button>
-          </Upload>
-          {imageName && <span style={{ marginLeft: 8 }}>Hình ảnh đã chọn: {imageName}</span>}
-          {imageUrl && <img src={imageUrl} alt="Program" className="mt-2 w-32 h-32 object-contain" />}
-        </Form.Item>
-        <Form.Item>
-          <Button type='primary' htmlType='submit' className='w-full' disabled={uploading}>
-            {uploading ? 'Đang tải lên...' : 'Cập nhật chương trình'}
-          </Button>
-          <Button type='default' onClick={onClose} className='ml-2'>
-            Hủy
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+          {promotions.map(promotion => (
+            <Option key={promotion._id} value={promotion._id}>
+              {promotion.code} - {promotion.description}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+      <Form.Item label="Hình ảnh">
+        <Upload
+          beforeUpload={handleUploadImage}
+          showUploadList={false}
+          maxCount={1}
+          customRequest={handleImageChange}
+        >
+          <Button icon={<UploadOutlined />}>Tải lên hình ảnh</Button>
+        </Upload>
+        {image && <img src={image} alt="Program" style={{ width: '100px', height: '100px', marginTop: '10px' }} />}
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit" loading={uploading}>
+          Cập nhật
+        </Button>
+        <Button onClick={onClose} style={{ marginLeft: '10px' }}>
+          Hủy
+        </Button>
+      </Form.Item>
+    </Form>
   );
 };
 
