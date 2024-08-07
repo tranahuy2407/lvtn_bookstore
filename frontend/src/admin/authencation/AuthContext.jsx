@@ -21,6 +21,11 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('admin', JSON.stringify(response.data));
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
+          // Clear the token and admin if there's an error
+          setToken('');
+          setAdmin(null);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('admin');
         }
       }
       setReady(true);
@@ -29,37 +34,25 @@ export const AuthProvider = ({ children }) => {
     fetchUserProfile();
   }, [token]);
 
-  const login = (newToken) => {
+  const login = async (newToken) => {
     setToken(newToken);
     localStorage.setItem('authToken', newToken);
-    fetchUserProfile();
+    await fetchUserProfile();
   };
 
   const logout = async () => {
     try {
-      await axios.post('http://localhost:5000/admin/logout');
+      await axios.post('http://localhost:5000/admin/logout', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       setToken('');
       setAdmin(null);
       localStorage.removeItem('authToken');
       localStorage.removeItem('admin');
     } catch (error) {
       console.error('Failed to logout:', error);
-    }
-  };
-
-  const fetchUserProfile = async () => {
-    if (token) {
-      try {
-        const response = await axios.get('http://localhost:5000/api/admin/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        setUser(response.data);
-        localStorage.setItem('admin', JSON.stringify(response.data));
-      } catch (error) {
-        console.error('Failed to fetch user profile:', error);
-      }
     }
   };
 

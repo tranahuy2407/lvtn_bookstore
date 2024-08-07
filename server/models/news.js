@@ -21,6 +21,10 @@ const newsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  createAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const New = mongoose.model("New", newsSchema);

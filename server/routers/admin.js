@@ -130,7 +130,7 @@ adminRouter.post("/admin/change-order-status", admin, async (req, res) => {
   }
 });
 
-// API to get daily revenue and expense data
+// Chart
 adminRouter.get('/admin/analytics', async (req, res) => {
   try {
     const receiptsAggregation = await BookReceipt.aggregate([
@@ -162,7 +162,6 @@ adminRouter.get('/admin/analytics', async (req, res) => {
       dataMap[_id] = { totalExpense, totalRevenue: 0 };
     });
 
-    // Populate dataMap with orders
     ordersAggregation.forEach(({ _id, totalRevenue }) => {
       if (!dataMap[_id]) {
         dataMap[_id] = { totalExpense: 0, totalRevenue };

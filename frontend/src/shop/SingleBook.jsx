@@ -13,7 +13,7 @@ const SingleBook = () => {
   const { addToCart } = useContext(CartContext);
   const { user } = useContext(UserContext);
   const { _id, name, images, price, promotion_price, description, promotion_percent, author, quantity } = useLoaderData();
-  const [authorName, setAuthorName] = useState('');
+  const [authorNames, setAuthorNames] = useState([]); 
   const [categoriesData, setCategoriesData] = useState([]);
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [interestedBooks, setInterestedBooks] = useState([]);
@@ -23,11 +23,14 @@ const SingleBook = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const navigate = useNavigate();
 
+  console.log(author)
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const authorResponse = await axios.get(`http://localhost:5000/author/${author}`);
-        setAuthorName(authorResponse.data.name);
+        const authorResponses = await Promise.all(
+          author.map(authorId => axios.get(`http://localhost:5000/author/${authorId}`))
+        );
+        setAuthorNames(authorResponses.map(response => response.data.name));
         const categoriesResponse = await axios.get(`http://localhost:5000/api/product-categories/${_id}`);
         setCategoriesData(categoriesResponse.data);
         const relatedResponse = await axios.get(`http://localhost:5000/api/related-books/${_id}`);
@@ -141,12 +144,21 @@ const SingleBook = () => {
             <div className="flex flex-col space-y-2">
             <p>
                 <span className="font-semibold">Tác giả: </span>
-                <Link 
-                  to={`/shop-by-author/${author}`} 
-                  className="text-black hover:text-blue-500 transition-colors duration-300 no-underline"
-                >
-                  {authorName}
-                </Link>
+                {authorNames.length > 0 ? (
+                  authorNames.map((authorName, index) => (
+                    <span key={index}>
+                      <Link 
+                        to={`/shop-by-author/${author[index]}`} 
+                        className="text-black hover:text-blue-500 transition-colors duration-300 no-underline"
+                      >
+                        {authorName}
+                      </Link>
+                      {index < authorNames.length - 1 && ', '}
+                    </span>
+                  ))
+                ) : (
+                  <span>Không có thông tin tác giả</span>
+                )}
               </p>
               <p><span className="font-semibold">Thể loại: </span> 
                 {categoriesData && categoriesData.map((category, index) => (

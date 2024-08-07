@@ -52,8 +52,13 @@ const BookCard = ({ headline, books }) => {
                 </div>
                 <div className='flex flex-col items-center text-center mt-4'>
                   <h3 className='text-lg font-semibold'>{book.name}</h3>
-                  <p className='text-gray-500 italic'> 
-                    {book.author[0]?.name || "Loading..."} 
+                  <p className='text-gray-500 italic'>
+                    {book.author.length > 0 ? book.author.map((author, index) => (
+                      <span key={index}>
+                        {author.name}
+                        {index < book.author.length - 1 && ', '}
+                      </span>
+                    )) : "Loading..."}
                   </p>
                 </div>
                 <div className='text-center mt-2'>
