@@ -1,6 +1,7 @@
 const express = require("express");
 const programRouter = express.Router();
 const Program = require("../models/program_promotions");
+const Promotion = require("../models/promotion")
 
 // API để lấy danh sách các chương trình giảm giá với status = 1
 programRouter.get("/programs", async (req, res) => {
@@ -13,16 +14,17 @@ programRouter.get("/programs", async (req, res) => {
 });
 
 // API để lấy chương trình giảm giá theo ID
-programRouter.get("/programs/:id", async (req, res) => {
+programRouter.get('/programs/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const program = await Program.findById(id).populate('promotions');
         if (!program) {
-            return res.status(404).json({ message: "Chương trình không tìm thấy." });
+            return res.status(404).json({ message: 'Chương trình không tìm thấy.' });
         }
         res.status(200).json(program);
     } catch (error) {
-        res.status(500).json({ message: "Đã xảy ra lỗi khi lấy dữ liệu chương trình." });
+        console.error('Error fetching program:', error);
+        res.status(500).json({ message: 'Đã xảy ra lỗi khi lấy dữ liệu chương trình.' });
     }
 });
 
@@ -39,7 +41,7 @@ programRouter.post("/programs", async (req, res) => {
 });
 
 // API để cập nhật chương trình giảm giá theo ID
-programRouter.put("/api/updateprogram/:id", async (req, res) => {
+programRouter.put('/api/updateprogram/:id', async (req, res) => {
     const programId = req.params.id;
     const updateData = req.body;
 
@@ -47,17 +49,20 @@ programRouter.put("/api/updateprogram/:id", async (req, res) => {
         const updatedProgram = await Program.findByIdAndUpdate(programId, updateData, { new: true }).populate('promotions');
 
         if (!updatedProgram) {
-            return res.status(404).json({ message: "Không tìm thấy chương trình để cập nhật" });
+            return res.status(404).json({ message: 'Không tìm thấy chương trình để cập nhật' });
         }
-
-        res.status(200).json({ message: "Cập nhật thành công", program: updatedProgram });
+        if (updateData.promotions && updateData.promotions.length > 0) {
+            await Promotion.updateMany(
+                { _id: { $in: updateData.promotions } },
+                { $set: { program: updatedProgram._id } }
+            );
+        }
+        res.status(200).json({ message: 'Cập nhật thành công', program: updatedProgram });
     } catch (error) {
-        console.error("Lỗi khi cập nhật chương trình:", error);
-        res.status(500).json({ message: "Đã xảy ra lỗi máy chủ" });
+        console.error('Lỗi khi cập nhật chương trình:', error);
+        res.status(500).json({ message: 'Đã xảy ra lỗi máy chủ' });
     }
 });
-
-
 // API để xóa chương trình giảm giá theo ID
 programRouter.delete("/api/deleteprogram/:id", async (req, res) => {
     const programId = req.params.id;
