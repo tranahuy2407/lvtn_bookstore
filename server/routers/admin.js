@@ -8,6 +8,7 @@ const Order = require("../models/order");
 const BookReceipt = require('../models/bookreceipt');
 const bcryptjs = require('bcryptjs');
 const jwtSecret = process.env.JWT_SECRET || "fasesaddyuasqwee16asdas2"; 
+const mongoose = require('mongoose');
 
 // Login API
 adminRouter.post("/admin/login", async (req, res) => {
@@ -79,13 +80,32 @@ adminRouter.post('/admin/add-product', async (req, res) => {
 });
 
 // Delete the product
-adminRouter.post("/admin/delete-product", async (req, res) => {
+adminRouter.delete('/admin/delete-book/:id', async (req, res) => {
   try {
-    const { id } = req.body;
-    let product = await Book.findByIdAndDelete(id);
-    res.json(product);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    // Chuyển đổi ID thành ObjectId
+    const bookId = mongoose.Types.ObjectId(req.params.id);
+    
+
+    // Tìm tất cả các đơn hàng chứa sách có ID này
+    const ordersWithBook = await Order.find({
+      'books.book': bookId
+    }).exec();
+
+    if (ordersWithBook.length > 0) {
+      return res.status(400).json({ message: 'Sách không thể xóa vì đang được sử dụng trong đơn hàng.' });
+    }
+
+    // Xóa sách khỏi cơ sở dữ liệu
+    const result = await Book.findByIdAndDelete(bookId);
+
+    if (!result) {
+      return res.status(404).json({ message: 'Sách không tồn tại.' });
+    }
+
+    res.status(200).json({ message: 'Xóa sách thành công.' });
+  } catch (error) {
+    // console.error('Lỗi khi xóa sách:', error);
+    res.status(500).json({ message: 'Lỗi server.' });
   }
 });
 
@@ -99,21 +119,24 @@ adminRouter.get("/admin/get-orders", admin, async (req, res) => {
 });
 // Update product
 adminRouter.put('/admin/update-product/:id', async (req, res) => {
-
   try {
     const { id } = req.params;
-    const updatedProductData = req.body;
-    console.log('Updated Product Data:', updatedProductData); 
-    const updatedProduct = await Book.findByIdAndUpdate(id, updatedProductData, { new: true });
+    const updateData = req.body;
 
-    if (!updatedProduct) {
-      return res.status(404).json({ error: 'Product not found' });
+    
+    const updatedBook = await Book.findByIdAndUpdate(id, updateData, {
+      new: true, 
+      runValidators: true 
+    });
+
+    if (!updatedBook) {
+      return res.status(404).json({ message: 'Sản phẩm không tồn tại.' });
     }
 
-    res.json({ message: 'Product updated successfully', product: updatedProduct });
+    res.status(200).json(updatedBook);
   } catch (error) {
-    console.error('Error updating product:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('Error updating book:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi khi cập nhật sản phẩm.' });
   }
 });
 

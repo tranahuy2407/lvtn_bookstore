@@ -5,7 +5,7 @@ import { UploadOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
-function EditProductForm({ product, onClose }) {
+function EditProductForm({ product, onClose, onUpdateSuccess }) {
   const UPLOAD_PRESET = "yznfezyj";
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmcfhbwbb/upload";
 
@@ -13,10 +13,9 @@ function EditProductForm({ product, onClose }) {
   const [categories, setCategories] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [publishers, setPublishers] = useState([]);
-  const [imageFile, setImageFile] = useState(null);
   const [imageName, setImageName] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState(product.promotion_percent || 0);
-  const [uploading, setUploading] = useState(false); 
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -106,14 +105,16 @@ function EditProductForm({ product, onClose }) {
   };
 
   const handleUpdateProduct = async () => {
-    setUploading(true); 
+    setUploading(true);
     try {
       await axios.put(`http://localhost:5000/admin/update-product/${updatedProduct._id}`, {
         ...updatedProduct,
         promotion_percent: discountPercentage,
         images: updatedProduct.images || null,
       });
+      
       message.success('Cập nhật sản phẩm thành công!');
+      onUpdateSuccess(); // Call the callback on success
       onClose();
     } catch (error) {
       console.error('Error updating product:', error.response || error.message);
@@ -122,7 +123,7 @@ function EditProductForm({ product, onClose }) {
       setUploading(false);
     }
   };
-  
+
   return (
     <div className="bg-white p-4 rounded-md shadow-lg">
       <h2 className="text-lg font-medium mb-4">Chỉnh sửa sản phẩm</h2>
@@ -141,7 +142,7 @@ function EditProductForm({ product, onClose }) {
             <InputNumber
               min={0}
               max={100}
-              value={updatedProduct.promotion_percent}
+              value={discountPercentage}
               onChange={handleDiscountPercentageChange}
               formatter={(value) => `${value}%`}
               parser={(value) => value.replace('%', '')}
@@ -154,6 +155,7 @@ function EditProductForm({ product, onClose }) {
         <div style={{ display: 'flex', gap: '16px' }}>
           <Form.Item label="Tác giả" style={{ flex: 1 }}>
             <Select
+              mode="multiple"
               value={updatedProduct.author}
               onChange={handleAuthorChange}
               style={{ width: '100%' }}

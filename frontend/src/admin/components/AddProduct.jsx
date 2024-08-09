@@ -20,7 +20,7 @@ const AddProduct = () => {
     promotion_percent: 0,
     promotion_price: 0,
     categories: [],
-    author: '',
+    author: [], // Changed to allow multiple authors
     publishers: '',
   });
 
@@ -53,11 +53,7 @@ const AddProduct = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'categories') {
-      setProduct({ ...product, categories: value });
-    } else {
-      setProduct({ ...product, [name]: value });
-    }
+    setProduct({ ...product, [name]: value });
   };
 
   const handleSelectChange = (value, field) => {
@@ -111,7 +107,7 @@ const AddProduct = () => {
   const handleSubmit = async () => {
     setUploading(true);
   
-    if (!product.name || !product.price || !product.categories.length || !product.author || !product.publishers) {
+    if (!product.name || !product.price || !product.categories.length || !product.author.length || !product.publishers) {
       message.error('Please fill in all required fields.');
       setUploading(false);
       return;
@@ -150,7 +146,7 @@ const AddProduct = () => {
         promotion_percent: 0,
         promotion_price: 0,
         categories: [],
-        author: '',
+        author: [],
         publishers: '',
       });
       setImageFile(null);
@@ -269,6 +265,7 @@ const AddProduct = () => {
           <div>
             <label className='block text-gray-700'>Tác Giả</label>
             <Select
+              mode='multiple' // Allow multiple authors
               name='author'
               value={product.author}
               onChange={(value) => handleSelectChange(value, 'author')}
@@ -319,4 +316,3 @@ const AddProduct = () => {
 };
 
 export default AddProduct;
-  

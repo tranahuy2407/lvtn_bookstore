@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faEye, faColumns } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { Modal, message } from 'antd';
-import EditProductForm from './EditProductFormm';
+import EditProductForm from './EditProductFormm';  // Chỉnh lại tên import nếu cần
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -28,38 +28,42 @@ function Products() {
   const [productsPerPage] = useState(7);
   const [totalPages, setTotalPages] = useState(0);
 
+  // Fetch products function
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/products');
+      const productsWithDetails = await Promise.all(response.data.map(async product => {
+        try {
+          const publisherResponse = await axios.get(`http://localhost:5000/api/publishers/${product.publishers}/name`);
+          const publisherName = publisherResponse.data.name;
+
+          const authorResponses = await Promise.all(product.author.map(async authorId => {
+            const authorResponse = await axios.get(`http://localhost:5000/api/authors/${authorId}/name`);
+            return authorResponse.data.name;
+          }));
+          const authorNames = authorResponses.join(', ');
+
+          const categoryResponses = await Promise.all(product.categories.map(async categoryId => {
+            const categoryResponse = await axios.get(`http://localhost:5000/api/categories/${categoryId}/name`);
+            return categoryResponse.data.name;
+          }));
+          const categoryNames = categoryResponses.join(', ');
+
+          return { ...product, publisherName, authorNames, categoryNames };
+        } catch (error) {
+          console.error(`Error fetching details for product ${product._id}:`, error);
+          return { ...product, publisherName: 'Unknown', categoryNames: 'Unknown', authorNames: 'Unknown' };
+        }
+      }));
+
+      setProducts(productsWithDetails);
+      setTotalPages(Math.ceil(productsWithDetails.length / productsPerPage));
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/products');
-        const productsWithDetails = await Promise.all(response.data.map(async product => {
-          try {
-            const publisherResponse = await axios.get(`http://localhost:5000/api/publishers/${product.publishers}/name`);
-            const publisherName = publisherResponse.data.name;
-
-            const authorResponse = await axios.get(`http://localhost:5000/api/authors/${product.author}/name`);
-            const authorName = authorResponse.data.name;
-
-            const categoryResponses = await Promise.all(product.categories.map(async categoryId => {
-              const categoryResponse = await axios.get(`http://localhost:5000/api/categories/${categoryId}/name`);
-              return categoryResponse.data.name;
-            }));
-            const categoryNames = categoryResponses.join(', ');
-
-            return { ...product, publisherName, authorName, categoryNames };
-          } catch (error) {
-            console.error(`Error fetching details for product ${product._id}:`, error);
-            return { ...product, publisherName: 'Unknown', categoryNames: 'Unknown', authorName: 'Unknown' };
-          }
-        }));
-
-        setProducts(productsWithDetails);
-        setTotalPages(Math.ceil(productsWithDetails.length / productsPerPage));
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    };
-
     fetchProducts();
   }, [productsPerPage]);
 
@@ -72,11 +76,7 @@ function Products() {
       onOk: async () => {
         try {
           await axios.post('http://localhost:5000/admin/delete-product', { id: productId });
-          setProducts(products.filter(product => product._id !== productId));
-          setTotalPages(Math.ceil((products.length - 1) / productsPerPage));
-          if (currentPage > Math.ceil((products.length - 1) / productsPerPage)) {
-            setCurrentPage(currentPage - 1);
-          }
+          await fetchProducts(); // Load lại dữ liệu sản phẩm sau khi xóa
           message.success('Xóa sản phẩm thành công.');
         } catch (error) {
           console.error('Lỗi khi xóa sản phẩm:', error);
@@ -177,7 +177,7 @@ function Products() {
                 {columnsVisible.price && <td>{product.price}</td>}
                 {columnsVisible.promotionPrice && <td>{product.promotion_price}</td>}
                 {columnsVisible.categories && <td>{product.categoryNames}</td>}
-                {columnsVisible.author && <td>{product.authorName}</td>}
+                {columnsVisible.author && <td>{product.authorNames}</td>}
                 {columnsVisible.publisher && <td>{product.publisherName}</td>}
                 {columnsVisible.quantity && <td>{product.quantity}</td>}
                 {columnsVisible.actions && (
@@ -206,30 +206,33 @@ function Products() {
             Trang trước
           </button>
           <div className="text-gray-600">
-            Trang {currentPage} / {totalPages}
+            Trang {currentPage} của {totalPages}
           </div>
           <button
             onClick={handleNextPage}
             className={`mx-1 px-3 py-1 rounded focus:outline-none ${currentPage === totalPages ? 'bg-gray-200 text-gray-700' : 'bg-blue-500 text-white'}`}
             disabled={currentPage === totalPages}
           >
-            Trang tiếp
+            Trang sau
           </button>
         </div>
       </div>
 
-      {editFormVisible && selectedProduct && (
-        <Modal
-          visible={editFormVisible}
-          onCancel={() => setEditFormVisible(false)}
-          footer={null}
-          title="Chỉnh sửa sản phẩm"
-          width={1000}
-          style={{ top: 20 }}
-        >
-          <EditProductForm product={selectedProduct} onClose={() => setEditFormVisible(false)} />
-        </Modal>
-      )}
+      <Modal
+        title="Chỉnh sửa sản phẩm"
+        visible={editFormVisible}
+        footer={null}
+        onCancel={() => setEditFormVisible(false)}
+        width={800} 
+      >
+        {selectedProduct && (
+          <EditProductForm
+            product={selectedProduct}
+            onClose={() => setEditFormVisible(false)}
+            onUpdateSuccess={fetchProducts} // Pass fetchProducts to update the list after edit
+          />
+        )}
+      </Modal>
     </div>
   );
 }
