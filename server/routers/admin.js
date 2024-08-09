@@ -82,13 +82,11 @@ adminRouter.post('/admin/add-product', async (req, res) => {
 // Delete the product
 adminRouter.delete('/admin/delete-book/:id', async (req, res) => {
   try {
-    // Chuyển đổi ID thành ObjectId
-    const bookId = mongoose.Types.ObjectId(req.params.id);
-    
+    const bookId = new mongoose.Types.ObjectId(req.params.id);
 
     // Tìm tất cả các đơn hàng chứa sách có ID này
     const ordersWithBook = await Order.find({
-      'books.book': bookId
+      'books.book._id': bookId
     }).exec();
 
     if (ordersWithBook.length > 0) {
@@ -104,10 +102,11 @@ adminRouter.delete('/admin/delete-book/:id', async (req, res) => {
 
     res.status(200).json({ message: 'Xóa sách thành công.' });
   } catch (error) {
-    // console.error('Lỗi khi xóa sách:', error);
+    console.error('Lỗi khi xóa sách:', error);
     res.status(500).json({ message: 'Lỗi server.' });
   }
 });
+
 
 adminRouter.get("/admin/get-orders", admin, async (req, res) => {
   try {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Modal } from 'antd';
+import { Modal, message } from 'antd';
 
 function Authors() {
   const [authors, setAuthors] = useState([]);
@@ -53,16 +53,18 @@ function Authors() {
       cancelText: 'Không',
       onOk: async () => {
         try {
-          const response = await axios.delete(`http://localhost:5000/api/authors/${id}`);
+          const response = await axios.delete(`http://localhost:5000/api/delete-author/${id}`);
           if (response.status === 200) {
             const updatedAuthors = authors.filter(author => author._id !== id);
             setAuthors(updatedAuthors);
             setTotalPages(Math.ceil(updatedAuthors.length / authorsPerPage));
+            message.success('Xóa tác giả thành công.');
           } else {
-            setError('Error deleting author');
+            setError(response.data.message || 'Lỗi khi xóa tác giả');
           }
         } catch (error) {
-          setError('Error deleting author');
+          setError(error.response?.data?.message || 'Lỗi khi xóa tác giả');
+          message.error(error.response?.data?.message || 'Lỗi khi xóa tác giả');
           console.error('Error deleting author:', error);
         }
       },

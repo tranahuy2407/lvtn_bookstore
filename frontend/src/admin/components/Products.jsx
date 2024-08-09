@@ -75,12 +75,12 @@ function Products() {
       cancelText: 'Không',
       onOk: async () => {
         try {
-          await axios.post('http://localhost:5000/admin/delete-product', { id: productId });
+          await axios.delete(`http://localhost:5000/admin/delete-book/${productId}`);
           await fetchProducts(); // Load lại dữ liệu sản phẩm sau khi xóa
           message.success('Xóa sản phẩm thành công.');
         } catch (error) {
           console.error('Lỗi khi xóa sản phẩm:', error);
-          message.error('Xóa sản phẩm không thành công. Vui lòng thử lại.');
+          message.error('Sách đang có trong đơn hàng không thể xoá');
         }
       },
     });

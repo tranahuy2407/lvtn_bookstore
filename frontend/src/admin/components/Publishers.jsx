@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import { Modal, message } from 'antd';
+
+const { confirm } = Modal;
 
 function Publishers() {
     const [publishers, setPublishers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [publishersPerPage] = useState(4);
     const [totalPages, setTotalPages] = useState(0);
-    const [message, setMessage] = useState('');
+    const [error, setError] = useState(''); // Thay đổi message thành error
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -25,39 +28,51 @@ function Publishers() {
         fetchPublishers();
     }, [publishersPerPage]);
 
-    const handleDelete = async (id) => {
-        try {
-            await axios.delete(`http://localhost:5000/api/publisher/${id}`);
-            const newPublishers = publishers.filter(publisher => publisher._id !== id);
-            setPublishers(newPublishers);
-            setTotalPages(Math.ceil(newPublishers.length / publishersPerPage));
-            setMessage('Xóa nhà xuất bản thành công');
-            if (currentPage > Math.ceil(newPublishers.length / publishersPerPage)) {
-                setCurrentPage(currentPage - 1);
-            }
-        } catch (error) {
-            console.error('Error deleting publisher:', error);
-            setMessage('Lỗi khi xoá nhà xuất bản');
-        }
+    const handleDelete = (id) => {
+        confirm({
+            title: 'Bạn có chắc chắn muốn xóa nhà xuất bản này không?',
+            content: 'Hành động này không thể hoàn tác.',
+            okText: 'Có',
+            cancelText: 'Không',
+            onOk: async () => {
+                try {
+                    const response = await axios.delete(`http://localhost:5000/api/delete-publisher/${id}`);
+                    
+                    if (response.status === 200) {
+                        const newPublishers = publishers.filter(publisher => publisher._id !== id);
+                        setPublishers(newPublishers);
+                        setTotalPages(Math.ceil(newPublishers.length / publishersPerPage));
+                        setError(''); // Xóa thông báo lỗi nếu xóa thành công
+                        if (currentPage > Math.ceil(newPublishers.length / publishersPerPage)) {
+                            setCurrentPage(currentPage - 1);
+                        }
+                        message.success('Xóa nhà xuất bản thành công.');
+                    } else {
+                        setError(response.data.message || 'Lỗi khi xóa nhà xuất bản');
+                    }
+                } catch (error) {
+                    setError(error.response?.data?.message || 'Lỗi khi xóa nhà xuất bản');
+                    message.error(error.response?.data?.message || 'Lỗi khi xóa nhà xuất bản');
+                    console.error('Error deleting publisher:', error);
+                }
+            },
+        });
     };
 
     const handleAddPublisher = () => {
         navigate('/admin/dashboard/addpublishers');
     };
 
-    // Tính toán index của nhà xuất bản đầu tiên và cuối cùng trên trang hiện tại
     const indexOfLastPublisher = currentPage * publishersPerPage;
     const indexOfFirstPublisher = indexOfLastPublisher - publishersPerPage;
     const currentPublishers = publishers.slice(indexOfFirstPublisher, indexOfLastPublisher);
 
-    // Chuyển đổi sang trang trước đó
     const handlePreviousPage = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
     };
 
-    // Chuyển đổi sang trang kế tiếp
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -67,7 +82,6 @@ function Publishers() {
     return (
         <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
             <strong className='text-gray-700 font-medium'>Danh sách nhà xuất bản</strong>
-            {message && <div className="text-green-500 mt-2">{message}</div>}
             <div className="mt-4 flex justify-start">
                 <button
                     onClick={handleAddPublisher}
@@ -112,7 +126,6 @@ function Publishers() {
                         ))}
                     </tbody>
                 </table>
-                {/* Phân trang */}
                 <div className="mt-3 flex justify-between items-center">
                     <button
                         onClick={handlePreviousPage}

@@ -1,6 +1,8 @@
 const express = require("express");
 const authorRouter = express.Router();
 const Author = require("../models/author");
+const mongoose = require('mongoose');
+const { Book } = require('../models/book');
 
 authorRouter.get("/author/:id", async (req, res) => {
     try {
@@ -26,17 +28,30 @@ authorRouter.get("/author/:id", async (req, res) => {
 
   
   //xoá tác giả
-  authorRouter.delete("/api/authors/:id", async (req, res) => {
-    const { id } = req.params;
-  
+  authorRouter.delete('/api/delete-author/:id', async (req, res) => {
     try {
-      const deletedAuthor = await Author.findByIdAndDelete(id);
-      if (!deletedAuthor) {
-        return res.status(404).json({ message: "Không tìm thấy tác giả để xoá" });
+      const authorId = new mongoose.Types.ObjectId(req.params.id);
+  
+      // Tìm tất cả các sách có chứa tác giả này
+      const booksWithAuthor = await Book.find({
+        author: authorId
+      }).exec();
+  
+      if (booksWithAuthor.length > 0) {
+        return res.status(400).json({ message: 'Tác giả không thể xóa vì đang có trong sách.' });
       }
-      res.json({ message: "Xoá tác giả thành công", deletedAuthor });
+  
+      // Xóa tác giả khỏi cơ sở dữ liệu
+      const result = await Author.findByIdAndDelete(authorId);
+  
+      if (!result) {
+        return res.status(404).json({ message: 'Tác giả không tồn tại.' });
+      }
+  
+      res.status(200).json({ message: 'Xóa tác giả thành công.' });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Lỗi khi xóa tác giả:', error);
+      res.status(500).json({ message: 'Lỗi server.' });
     }
   });
 

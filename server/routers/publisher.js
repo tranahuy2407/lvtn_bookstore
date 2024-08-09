@@ -1,6 +1,8 @@
 const express = require("express");
 const publisherRouter = express.Router();
 const Publisher = require("../models/publisher");
+const mongoose = require('mongoose');
+const { Book } = require("../models/book");
 
 //Lấy nhà xuất bản theo id
 publisherRouter.get("/publisher/:id", async (req, res) => {
@@ -56,18 +58,32 @@ publisherRouter.post("/api/add_publisher", async (req, res) => {
   });
 
 //Delete publisher theo id
-publisherRouter.delete("/api/publisher/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deletedPublisher = await Publisher.findByIdAndDelete(id);
-      if (!deletedPublisher) {
-        return res.status(404).json({ error: "Nhà xuất bản không tồn tại" });
-      }
-      res.json({ message: "Xóa nhà xuất bản thành công" });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+publisherRouter.delete('/api/delete-publisher/:id', async (req, res) => {
+  try {
+    const publisherId = new mongoose.Types.ObjectId(req.params.id);
+
+    // Kiểm tra xem nhà xuất bản có trong sách nào không
+    const booksWithPublisher = await Book.find({
+      publishers: publisherId
+    }).exec();
+
+    if (booksWithPublisher.length > 0) {
+      return res.status(400).json({ message: 'Không thể xóa nhà xuất bản vì đang có trong sách.' });
     }
-  });
+
+    // Xóa nhà xuất bản khỏi cơ sở dữ liệu
+    const result = await Publisher.findByIdAndDelete(publisherId);
+
+    if (!result) {
+      return res.status(404).json({ message: 'Nhà xuất bản không tồn tại.' });
+    }
+
+    res.status(200).json({ message: 'Xóa nhà xuất bản thành công.' });
+  } catch (error) {
+    console.error('Lỗi khi xóa nhà xuất bản:', error);
+    res.status(500).json({ message: 'Lỗi server.' });
+  }
+});
   
 //Update publisher theo id
 publisherRouter.put("/api/publisher/:id", async (req, res) => {

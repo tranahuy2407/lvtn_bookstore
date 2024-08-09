@@ -1,6 +1,8 @@
 const express = require("express");
 const categoryRouter = express.Router();
 const  Category  = require("../models/category");
+const mongoose = require("mongoose");
+const { Book } = require("../models/book");
 
 categoryRouter.get("/api/categories", async (req, res) => {
   try {
@@ -76,20 +78,30 @@ categoryRouter.post('/api/addcategories', async (req, res) => {
 });
 
 //Xoá thể loại 
-categoryRouter.delete('/api/categories/:categoryId', async (req, res) => {
-  const { categoryId } = req.params;
+categoryRouter.delete('/api/delete-category/:id', async (req, res) => {
   try {
-    // Tìm và xoá thể loại dựa trên categoryId
-    const deletedCategory = await Category.findByIdAndDelete(categoryId);
+    const categoryId = new mongoose.Types.ObjectId(req.params.id);
 
-    if (!deletedCategory) {
-      return res.status(404).json({ error: 'Category not found' });
+    // Tìm tất cả các sách có chứa thể loại này
+    const booksWithCategory = await Book.find({
+      categories: categoryId
+    }).exec();
+
+    if (booksWithCategory.length > 0) {
+      return res.status(400).json({ message: 'Không thể xoá thể loại vì đang có trong sách.' });
     }
 
-    res.json({ message: 'Xoá thể loại thành công' });
+    // Xóa thể loại khỏi cơ sở dữ liệu
+    const result = await Category.findByIdAndDelete(categoryId);
+
+    if (!result) {
+      return res.status(404).json({ message: 'Thể loại không tồn tại.' });
+    }
+
+    res.status(200).json({ message: 'Xóa thể loại thành công.' });
   } catch (error) {
-    console.error('Error deleting category:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Lỗi khi xóa thể loại:', error);
+    res.status(500).json({ message: 'Lỗi server.' });
   }
 });
 

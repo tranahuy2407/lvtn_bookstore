@@ -14,7 +14,7 @@ function Categories() {
     const [totalPages, setTotalPages] = useState(0);
     const [error, setError] = useState('');
     const [filterType, setFilterType] = useState('');
-    const [message, setMessage] = useState('');
+    const [messageApi, contextHolder] = message.useMessage();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -56,8 +56,8 @@ function Categories() {
             cancelText: 'Không',
             onOk: async () => {
                 try {
-                    const response = await axios.delete(`http://localhost:5000/api/categories/${categoryId}`);
-                    setMessage(response.data.message);
+                    const response = await axios.delete(`http://localhost:5000/api/delete-category/${categoryId}`);
+                    messageApi.success(response.data.message);
                     const newCategories = categories.filter(category => category._id !== categoryId);
                     setCategories(newCategories);
                     setTotalPages(Math.ceil(newCategories.length / categoriesPerPage));
@@ -66,7 +66,11 @@ function Categories() {
                     }
                 } catch (error) {
                     console.error('Error deleting category:', error);
-                    setMessage('Xóa thể loại thất bại');
+                    if (error.response && error.response.data.message) {
+                        messageApi.error(error.response.data.message);
+                    } else {
+                        messageApi.error('Xóa thể loại thất bại');
+                    }
                 }
             },
         });
@@ -99,6 +103,7 @@ function Categories() {
 
     return (
         <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
+            {contextHolder}
             <div className="flex justify-between items-center">
                 <strong className='text-gray-700 font-medium'>Danh sách thể loại</strong>
                 <Select
@@ -112,7 +117,6 @@ function Categories() {
                     ))}
                 </Select>
             </div>
-            {message && <div className="text-green-500 mt-2">{message}</div>}
             {error && <div className="text-red-500 mt-2">{error}</div>}
             <div className="mt-4 flex justify-start">
                 <button
