@@ -146,7 +146,7 @@ adminRouter.post("/admin/change-order-status", admin, async (req, res) => {
   }
 });
 
-// Chart
+// Chart ngày trong tuần 
 adminRouter.get('/admin/analytics', async (req, res) => {
   try {
     const receiptsAggregation = await BookReceipt.aggregate([

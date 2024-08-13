@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import moment from 'moment';
-import { Select, DatePicker, Button, InputNumber, Table, message, Input, Upload, Modal } from 'antd';
-import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+import * as XLSX from "xlsx";
+import {
+  Select,
+  DatePicker,
+  Button,
+  InputNumber,
+  Table,
+  message,
+  Input,
+  Upload,
+  Modal,
+} from "antd";
+import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 const { Column } = Table;
@@ -13,27 +24,36 @@ const CreateBookReceipt = () => {
   const [receiptItems, setReceiptItems] = useState([]);
   const [supplier, setSupplier] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
-  const [date] = useState(moment().format('DD/MM/YYYY'));
+  const [supplierLookup, setSupplierLookup] = useState({});
+  const [date] = useState(moment().format("DD/MM/YYYY"));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/suppliers');
-        setSuppliers(response.data);
+        const response = await axios.get("http://localhost:5000/api/suppliers");
+        const suppliersData = response.data;
+        setSuppliers(suppliersData);
+
+        // Create a lookup object for suppliers
+        const lookup = {};
+        suppliersData.forEach((supplier) => {
+          lookup[supplier._id] = supplier.name;
+        });
+        setSupplierLookup(lookup);
       } catch (err) {
-        console.error('Error fetching suppliers:', err);
-        message.error('Failed to fetch suppliers.');
+        console.error("Error fetching suppliers:", err);
+        message.error("Failed to fetch suppliers.");
       }
     };
 
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/products');
+        const response = await axios.get("http://localhost:5000/api/products");
         setProducts(response.data);
       } catch (err) {
-        console.error('Error fetching products:', err);
-        message.error('Failed to fetch products.');
+        console.error("Error fetching products:", err);
+        message.error("Failed to fetch products.");
       }
     };
 
@@ -46,17 +66,27 @@ const CreateBookReceipt = () => {
   };
 
   const handleAddProduct = () => {
-    const selectedProductsDetails = products.filter(p => selectedProducts.includes(p._id));
+    const selectedProductsDetails = products.filter((p) =>
+      selectedProducts.includes(p._id)
+    );
 
-    const existingProductIds = new Set(receiptItems.map(item => item.book._id));
-    const newItems = selectedProductsDetails.filter(p => !existingProductIds.has(p._id))
-      .map(p => ({ book: p, quantity: 1, price: p.price }));
+    const existingProductIds = new Set(
+      receiptItems.map((item) => item.book._id)
+    );
+    const newItems = selectedProductsDetails
+      .filter((p) => !existingProductIds.has(p._id))
+      .map((p) => ({
+        book: p,
+        quantity: 1,
+        price: p.price,
+        supplier: supplier,
+      }));
 
     if (newItems.length < selectedProductsDetails.length) {
-      message.error('Một số sản phẩm đã có trong phiếu nhập.');
+      message.error("Một số sản phẩm đã có trong phiếu nhập.");
     }
 
-    setReceiptItems(prevItems => [...prevItems, ...newItems]);
+    setReceiptItems((prevItems) => [...prevItems, ...newItems]);
   };
 
   const handleQuantityChange = (index, value) => {
@@ -73,49 +103,91 @@ const CreateBookReceipt = () => {
 
   const handleRemoveItem = (index) => {
     Modal.confirm({
-      title: 'Bạn có chắc muốn xóa sản phẩm này khỏi phiếu nhập?',
+      title: "Bạn có chắc muốn xóa sản phẩm này khỏi phiếu nhập?",
       onOk: () => {
         const newItems = [...receiptItems];
         newItems.splice(index, 1);
         setReceiptItems(newItems);
-      }
+      },
     });
   };
 
   const handleSaveReceipt = async () => {
     if (!supplier) {
-      message.error('Vui lòng chọn nhà cung cấp.');
+      message.error("Vui lòng chọn nhà cung cấp.");
       return;
     }
 
     setLoading(true);
     try {
-      const totalAmount = receiptItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+      const totalAmount = receiptItems.reduce(
+        (total, item) => total + item.price * item.quantity,
+        0
+      );
 
-      const response = await axios.post('http://localhost:5000/api/book-receipts', {
-        books: receiptItems,
-        totalPrice: totalAmount,
-        supplierId: supplier,
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/book-receipts",
+        {
+          books: receiptItems,
+          totalPrice: totalAmount,
+          supplierId: supplier,
+        }
+      );
 
-      message.success('Phiếu nhập hàng đã được lưu.');
+      message.success("Phiếu nhập hàng đã được lưu.");
       setReceiptItems([]);
       setSupplier(null);
     } catch (err) {
-      console.error('Error saving receipt:', err);
-      message.error('Failed to save receipt.');
+      console.error("Error saving receipt:", err);
+      message.error("Failed to save receipt.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpload = (file) => {
-    console.log('Uploaded file:', file);
-    message.success('Tệp Excel đã được tải lên.');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+      // Xóa các dòng trống
+      const filteredData = jsonData.filter(
+        (item) =>
+          item["Tên sách"] &&
+          item["Số lượng"] &&
+          item["Đơn giá"] &&
+          item["Ảnh"] &&
+          item["Nhà cung cấp"]
+      );
+
+      // Xử lý dữ liệu Excel
+      const newItems = filteredData.map((item) => ({
+        book: {
+          name: item["Tên sách"],
+          price: item["Đơn giá"],
+          images: item["Ảnh"],
+        },
+        quantity: item["Số lượng"],
+        price: item["Đơn giá"],
+        supplier: item["Nhà cung cấp"], // Sử dụng tên nhà cung cấp trực tiếp
+      }));
+
+      setReceiptItems(newItems);
+      message.success("Tệp Excel đã được tải lên và dữ liệu đã được cập nhật.");
+    };
+
+    reader.readAsArrayBuffer(file);
     return false;
   };
 
-  const totalAmount = receiptItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const totalAmount = receiptItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 
   return (
     <div className="flex flex-col">
@@ -146,7 +218,7 @@ const CreateBookReceipt = () => {
               onChange={(value) => setSupplier(value)}
               value={supplier}
             >
-              {suppliers.map(supplier => (
+              {suppliers.map((supplier) => (
                 <Option key={supplier._id} value={supplier._id}>
                   {supplier.name}
                 </Option>
@@ -170,17 +242,13 @@ const CreateBookReceipt = () => {
               className="w-full"
               onChange={handleProductChange}
             >
-              {products.map(product => (
+              {products.map((product) => (
                 <Option key={product._id} value={product._id}>
                   {product.name}
                 </Option>
               ))}
             </Select>
-            <Button
-              type="primary"
-              className="mt-2"
-              onClick={handleAddProduct}
-            >
+            <Button type="primary" className="mt-2" onClick={handleAddProduct}>
               Thêm vào phiếu
             </Button>
           </div>
@@ -197,7 +265,12 @@ const CreateBookReceipt = () => {
                   <img
                     src={record.book.images}
                     alt={record.book.name}
-                    style={{ width: 50, height: 50, objectFit: 'cover', marginRight: 10 }}
+                    style={{
+                      width: 50,
+                      height: 50,
+                      objectFit: "cover",
+                      marginRight: 10,
+                    }}
                   />
                   {record.book.name}
                 </div>
@@ -235,6 +308,11 @@ const CreateBookReceipt = () => {
               render={(text, record) => record.price * record.quantity}
             />
             <Column
+              title="Nhà cung cấp"
+              key="supplier"
+              render={(text, record) => record.supplier || "N/A"}
+            />
+            <Column
               title="Thao tác"
               key="action"
               render={(text, record, index) => (
@@ -245,7 +323,9 @@ const CreateBookReceipt = () => {
             />
           </Table>
           <div className="flex justify-between items-center mt-4">
-            <span className="text-lg font-semibold">Tổng tiền: {totalAmount.toLocaleString()}₫</span>
+            <span className="text-lg font-semibold">
+              Tổng tiền: {totalAmount.toLocaleString()}₫
+            </span>
             <Button
               type="primary"
               loading={loading}
