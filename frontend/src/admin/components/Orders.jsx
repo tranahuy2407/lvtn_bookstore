@@ -83,7 +83,7 @@ const Orders = () => {
   
       const response = await fetchProduct(record._id);
   
-      // Check if response contains the expected properties
+      
       if (!response || !Array.isArray(response.books)) {
         console.error("Expected response.books to be an array, but received:", response);
         Modal.info({
@@ -176,6 +176,7 @@ const Orders = () => {
       key: "orderCode",
       title: "Mã đơn hàng",
       dataIndex: "orderCode",
+      sorter: (a, b) => a.orderCode.localeCompare(b.orderCode),
     },
     {
       key: "orderedAt",
@@ -218,6 +219,7 @@ const Orders = () => {
             : "Đã giao"}
         </Tag>
       ),
+      sorter: (a, b) => a.status - b.status,
     },
     {
       key: "actions",

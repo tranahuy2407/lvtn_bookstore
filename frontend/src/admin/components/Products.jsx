@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faEye, faColumns } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faEye, faColumns, faSearch } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-import { Modal, message } from 'antd';
-import EditProductForm from './EditProductFormm';  // Chỉnh lại tên import nếu cần
+import { Modal, message, Input } from 'antd';
+import EditProductForm from './EditProductFormm';  
+import { useNavigate } from 'react-router-dom';
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showColumnsForm, setShowColumnsForm] = useState(false);
@@ -28,7 +32,6 @@ function Products() {
   const [productsPerPage] = useState(7);
   const [totalPages, setTotalPages] = useState(0);
 
-  // Fetch products function
   const fetchProducts = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/products');
@@ -57,6 +60,7 @@ function Products() {
       }));
 
       setProducts(productsWithDetails);
+      setFilteredProducts(productsWithDetails); // Initialize filtered products
       setTotalPages(Math.ceil(productsWithDetails.length / productsPerPage));
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -67,6 +71,18 @@ function Products() {
     fetchProducts();
   }, [productsPerPage]);
 
+  useEffect(() => {
+    const filtered = products.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.authorNames.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.categoryNames.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.publisherName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+    setTotalPages(Math.ceil(filtered.length / productsPerPage));
+    setCurrentPage(1); 
+  }, [searchTerm, products]);
+
   const handleDeleteProduct = (productId) => {
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn xóa sản phẩm này không?',
@@ -76,7 +92,7 @@ function Products() {
       onOk: async () => {
         try {
           await axios.delete(`http://localhost:5000/admin/delete-book/${productId}`);
-          await fetchProducts(); // Load lại dữ liệu sản phẩm sau khi xóa
+          await fetchProducts(); 
           message.success('Xóa sản phẩm thành công.');
         } catch (error) {
           console.error('Lỗi khi xóa sản phẩm:', error);
@@ -84,6 +100,10 @@ function Products() {
         }
       },
     });
+  };
+
+  const handleAddProduct = () => {
+    navigate('/admin/dashboard/add-product');
   };
 
   const openEditForm = (product) => {
@@ -104,7 +124,7 @@ function Products() {
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -118,34 +138,69 @@ function Products() {
     }
   };
 
+  const handleShowColumnsModal = () => {
+    setShowColumnsForm(true);
+  };
+
+  const handleCloseColumnsModal = () => {
+    setShowColumnsForm(false);
+  };
+
   return (
     <div className='bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1'>
       <strong className='text-gray-700 font-medium'>Danh sách sản phẩm</strong>
-      <div className="mt-4 flex justify-end items-center relative">
+      
+      <div className="mt-4 flex justify-between items-center">
+        <button
+          onClick={handleAddProduct}
+          className='bg-green-500 text-white px-4 py-2 rounded'
+        >
+          Thêm sản phẩm
+        </button>
+
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-600">Cột hiển thị:</span>
           <FontAwesomeIcon
             icon={faColumns}
             className="text-gray-600 ml-1 cursor-pointer"
-            onClick={() => setShowColumnsForm(!showColumnsForm)}
+            onClick={handleShowColumnsModal}
           />
         </div>
-        {showColumnsForm && (
-          <div className="absolute top-full right-0 mt-2 flex flex-col items-start space-y-2 border rounded p-2 bg-white shadow-lg">
-            {Object.keys(columnsVisible).map(column => (
-              <label key={column} className="flex items-center space-x-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={columnsVisible[column]}
-                  onChange={() => toggleColumnVisibility(column)}
-                  className="form-checkbox h-4 w-4 text-green-500"
-                />
-                <span className="text-gray-700 text-sm">{column}</span>
-              </label>
-            ))}
-          </div>
-        )}
       </div>
+
+      <div className="mt-4 flex items-center">
+        <Input
+          prefix={<FontAwesomeIcon icon={faSearch} />}
+          placeholder="Tìm kiếm sản phẩm..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+          style={{ maxWidth: '400px', width: '100%' }}
+        />
+      </div>
+
+      <Modal
+        title="Chọn cột hiển thị"
+        visible={showColumnsForm}
+        onCancel={handleCloseColumnsModal}
+        footer={null}
+        width={400}
+      >
+        <div className="flex flex-col space-y-2">
+          {Object.keys(columnsVisible).map(column => (
+            <label key={column} className="flex items-center space-x-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={columnsVisible[column]}
+                onChange={() => toggleColumnVisibility(column)}
+                className="form-checkbox h-4 w-4 text-green-500"
+              />
+              <span className="text-gray-700 text-sm">{column}</span>
+            </label>
+          ))}
+        </div>
+      </Modal>
+
       <div className='mt-3'>
         <table className='w-full text-gray-700'>
           <thead>

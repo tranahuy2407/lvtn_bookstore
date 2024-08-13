@@ -6,6 +6,7 @@ const Promotion = require("../models/promotion");
 const ReturnBook = require("../models/returnbook");
 const User = require("../models/user");
 const { sendEmailRequestReturn } = require('./sendmail'); 
+
 // Nhập giảm giá
 userRouter.post('/apply-promotion', async (req, res) => {
   try {
@@ -173,5 +174,41 @@ userRouter.put('/api/returns/:id', async (req, res) => {
   }
 });
 
+// lấy đơn đổi trả
+userRouter.get('/api/returnbooks', async (req, res) => {
+  try {
+    const returnBooks = await ReturnBook.find()
+      .populate('order')  // Populate to get order details
+      .populate('books')  // Populate to get book details
+      .populate('userId'); // Populate to get user details
+    
+    res.status(200).json(returnBooks);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving return books', error: error.message });
+  }
+});
+
+//thay đổi trạng thái
+userRouter.put('/api/returnbooks/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    
+    const updatedReturnBook = await ReturnBook.findByIdAndUpdate(
+      id, 
+      { status: status }, 
+      { new: true }
+    );
+
+    if (!updatedReturnBook) {
+      return res.status(404).json({ message: 'Đơn đổi trả không tồn tại' });
+    }
+
+    res.status(200).json({ message: 'Trạng thái đã được cập nhật thành công', updatedReturnBook });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái', error: error.message });
+  }
+});
 
 module.exports = userRouter;
