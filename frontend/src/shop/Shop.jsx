@@ -64,16 +64,20 @@ const Shop = () => {
     const fetchAuthors = async () => {
       const fetchedAuthors = {};
       for (const book of books) {
-        if (book.author) {
+        if (book.author && book.author.length > 0) {
           try {
-            const response = await axios.get(`http://localhost:5000/author/${book.author}`);
-            fetchedAuthors[book.author] = response.data.name || 'Unknown Author';
+            const responses = await Promise.all(
+              book.author.map(authorId =>
+                axios.get(`http://localhost:5000/author/${authorId}`)
+              )
+            );
+            fetchedAuthors[book._id] = responses.map(response => response.data.name || 'Unknown Author').join(', ');
           } catch (error) {
             console.error("Error fetching author data:", error);
-            fetchedAuthors[book.author] = 'Unknown Author';
+            fetchedAuthors[book._id] = 'Unknown Author';
           }
         } else {
-          fetchedAuthors[book.author] = 'Unknown Author';
+          fetchedAuthors[book._id] = 'Unknown Author';
         }
       }
       setAuthorNames(fetchedAuthors);
@@ -83,7 +87,6 @@ const Shop = () => {
       fetchAuthors();
     }
   }, [books]);
-
   const handleCategoryChange = (event) => {
     const { value, checked } = event.target;
     setSelectedCategories(prev =>
@@ -139,7 +142,6 @@ const Shop = () => {
   const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
 
   const handleBookClick = async (bookId) => {
     if (user && user._id) {
@@ -240,7 +242,7 @@ const Shop = () => {
                         {book.name}
                       </h5>
                       <p className="text-gray-500 italic mb-2">
-                        {authorNames[book.author] || "Loading..."}
+                        {authorNames[book._id] || "Loading..."}
                       </p>
                       <p className="text-gray-700 mb-2">
                         <span className="font-bold text-blue-600">
@@ -264,14 +266,12 @@ const Shop = () => {
               )}
             </div>
             {filteredBooks.length > booksPerPage && (
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(filteredBooks.length / booksPerPage)}
-                  onPageChange={paginate}
-                />
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredBooks.length / booksPerPage)}
+              paginate={paginate}
+            />
+             )}
           </div>
         </div>
       </div>

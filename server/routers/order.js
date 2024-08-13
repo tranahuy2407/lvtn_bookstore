@@ -175,6 +175,40 @@ orderRouter.get("/api/orders/:orderId", async (req, res) => {
   }
 });
 
+//
+orderRouter.get('/orders/code', async (req, res) => {
+  try {
+    const { orderCode, userId } = req.query;
+
+    if (!orderCode || !userId) {
+      return res.status(400).json({ message: 'Order code and user ID are required' });
+    }
+
+    const cleanedOrderCode = orderCode.replace('#', '');
+
+    const query = {
+      $or: [
+        { orderCode: `#${cleanedOrderCode}` }, 
+        { orderCode: cleanedOrderCode }
+      ],
+      userId: userId,
+      status: 4 
+    };
+    
+    const order = await Order.findOne(query);
+    if (!order) {
+      return res.status(404).json({ message: 'Bạn chưa đặt đơn hàng này hoặc đơn hàng không có trạng thái phù hợp' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error('Error retrieving order:', error);
+    res.status(500).json({ message: 'Error retrieving order' });
+  }
+});
+
+
+
 // Endpoint để cập nhật trạng thái đơn hàng và lưu lịch sử
 orderRouter.post("/api/update-order-status", async (req, res) => {
   const { orderId, status } = req.body;
@@ -399,6 +433,8 @@ orderRouter.post('/callback', async (req, res) => {
   }
   res.json(result);
 });
+
+//Hoan tien khi hủy
 
 
 //Lay don hang cua user co id

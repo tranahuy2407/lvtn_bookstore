@@ -56,7 +56,8 @@ import ProtectedRouteUser from './ProtectedRouteUser';
 import Shop_By_Author from "../shop_by_category/Shop_By_Author";
 import Program from "../admin/components/Program";
 import AddProgram from "../admin/components/AddProgram";
-
+import ReturnBook from "../shop/ReturnBook";
+import ViewRequest from "../shop/VỉewRequest"
 const router = createBrowserRouter([
   // User routes
   {
@@ -89,11 +90,17 @@ const router = createBrowserRouter([
       { path: "/checkout", element: <Checkout /> },
       { path: "/invoice/:orderId", 
         element: <ProtectedRouteUser element={<Invoice/>} /> },
-      { path: "/order-success", element: <OrderSuccess /> },
+      { path: "/order-success/*", element: <OrderSuccess /> },
       { path: "/search", element: <Search /> },
       { path: "/ratings/:orderId", element: <Rating /> },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password/:token", element: <ResetPassword /> },
+      { path: "/return-book", element: <ReturnBook /> },
+      { 
+        path: "/requests/:userId", 
+        element: <ProtectedRouteUser element={<ViewRequest/>} />, 
+        loader: ({ params }) => fetch(`http://localhost:5000/api/returns/user/${params.userId}`)
+      },
     ]
   },
   

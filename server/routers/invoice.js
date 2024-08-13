@@ -115,7 +115,7 @@ invoiceRouter.get('/invoices/:orderId/pdf', async (req, res) => {
             }
 
             // Set response headers
-            const fileName = `invoice_${invoice.orderCode}.pdf`;
+            const fileName = `invoice_${invoice.order.orderCode}.pdf`;
             res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
             res.setHeader('Content-Type', 'application/pdf');
 

@@ -19,7 +19,6 @@ adminRouter.post("/admin/login", async (req, res) => {
     if (!admin) {
       return res.status(400).json({ error: "Email does not exist!" });
     }
-    console.log(admin)
     const isMatch = await bcryptjs.compare(password, admin.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Incorrect password!" });
@@ -40,7 +39,6 @@ adminRouter.post("/admin/login", async (req, res) => {
 });
 //Láy thông thôngtin 
 adminRouter.get('/api/admin/profile', (req, res) => {
-  // Lấy token từ header Authorization
   const token = req.headers.authorization?.split(' ')[1];
   
   if (token) {
@@ -83,8 +81,6 @@ adminRouter.post('/admin/add-product', async (req, res) => {
 adminRouter.delete('/admin/delete-book/:id', async (req, res) => {
   try {
     const bookId = new mongoose.Types.ObjectId(req.params.id);
-
-    // Tìm tất cả các đơn hàng chứa sách có ID này
     const ordersWithBook = await Order.find({
       'books.book._id': bookId
     }).exec();
@@ -92,8 +88,6 @@ adminRouter.delete('/admin/delete-book/:id', async (req, res) => {
     if (ordersWithBook.length > 0) {
       return res.status(400).json({ message: 'Sách không thể xóa vì đang được sử dụng trong đơn hàng.' });
     }
-
-    // Xóa sách khỏi cơ sở dữ liệu
     const result = await Book.findByIdAndDelete(bookId);
 
     if (!result) {

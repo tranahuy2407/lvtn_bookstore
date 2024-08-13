@@ -7,6 +7,10 @@ export const CartProvider = ({ children }) => {
     const storedCartItems = JSON.parse(localStorage.getItem("cartItems"));
     return storedCartItems || [];
   });
+  const [percentDiscount, setPercentDiscount] = useState(null);
+  const [moneyDiscount, setMoneyDiscount] = useState(null);
+  const [shipDiscount, setShipDiscount] = useState(null);
+
 
   const [discountCode, setDiscountCode] = useState(() => {
     const storedDiscountCode = JSON.parse(localStorage.getItem("discountCode"));
@@ -55,27 +59,22 @@ export const CartProvider = ({ children }) => {
   }, [discountedPrice]);
 
   useEffect(() => {
-    if (discountApplied && discountCode) {
-      const promotionValue = discountCode.value || 0; 
-      const discountType = discountCode.type || 'sum'; 
-
-      let discountAmount = 0;
-      if (discountType === 'percent') {
-        discountAmount = (totalPrice * promotionValue) / 100;
-      } else if (discountType === 'money') {
-        discountAmount = promotionValue;
-      } else if (discountType === 'ship') {
-        setShippingCost(promotionValue);
-        discountAmount = 0; 
-      }
-
-      setDiscountedPrice(totalPrice - discountAmount);
-    } else {
-      setDiscountedPrice(totalPrice);
-      setShippingCost(0);
+    let discountAmount = 0;
+  
+    if (percentDiscount) {
+      discountAmount += (totalPrice * percentDiscount.value) / 100;
     }
-  }, [cartItems, totalPrice, discountApplied, discountCode]);
-
+    if (moneyDiscount) {
+      discountAmount += moneyDiscount.value;
+    }
+    if (shipDiscount) {
+      setShippingCost(shipDiscount.value);
+    }
+  
+    setDiscountedPrice(totalPrice - discountAmount);
+  }, [totalPrice, percentDiscount, moneyDiscount, shipDiscount]);
+  
+  
   const addToCart = (item) => {
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
@@ -141,28 +140,34 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        increaseQuantity,
-        decreaseQuantity,
-        updateQuantity,
-        discountCode,
-        totalPrice,
-        setDiscountCode,
-        discountApplied,
-        setDiscountApplied,
-        discountedPrice,
-        setDiscountedPrice,
-        shippingCost,
-        setShippingCost,
-        successMessage,
-        setSuccessMessage,
-        errorMessage,
-        setErrorMessage,
-        clearCart,
-      }}
+    value={{
+      cartItems,
+      addToCart,
+      removeFromCart,
+      increaseQuantity,
+      decreaseQuantity,
+      updateQuantity,
+      discountCode,
+      totalPrice,
+      setDiscountCode,
+      discountApplied,
+      setDiscountApplied,
+      discountedPrice,
+      setDiscountedPrice,
+      shippingCost,
+      setShippingCost,
+      percentDiscount,
+      setPercentDiscount,
+      moneyDiscount,
+      setMoneyDiscount,
+      shipDiscount,
+      setShipDiscount,
+      successMessage,
+      setSuccessMessage,
+      errorMessage,
+      setErrorMessage,
+      clearCart,
+    }}
     >
       {children}
     </CartContext.Provider>

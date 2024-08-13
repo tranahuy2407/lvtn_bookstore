@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({ currentPage, totalPages, paginate }) => {
   const pageNumbers = [];
 
   for (let i = 1; i <= totalPages; i++) {
@@ -14,7 +14,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <li className="pagination-item">
             <button
               className="pagination-link flex items-center px-3 py-1 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={() => onPageChange(currentPage - 1)}
+              onClick={() => paginate(currentPage - 1)}
             >
               <span className="arrow-left" aria-hidden="true">&#8592;</span>
               <span className="sr-only">Previous</span>
@@ -26,7 +26,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <li key={number} className="pagination-item">
             <button
               className={`pagination-link ${currentPage === number ? 'pagination-link-active' : ''} px-3 py-1 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              onClick={() => onPageChange(number)}
+              onClick={() => paginate(number)}
             >
               {number}
             </button>
@@ -37,7 +37,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <li className="pagination-item">
             <button
               className="pagination-link flex items-center px-3 py-1 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={() => onPageChange(currentPage + 1)}
+              onClick={() => paginate(currentPage + 1)}
             >
               <span className="arrow-right" aria-hidden="true">&#8594;</span>
               <span className="sr-only">Next</span>

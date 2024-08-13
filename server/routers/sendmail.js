@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
+const axios = require('axios');
 dotenv.config();
 
 const sendEmailCreateOrder = async (email, orderData) => {
@@ -14,7 +15,6 @@ const sendEmailCreateOrder = async (email, orderData) => {
       },
     });
 
-    // Generate HTML for the ordered products
     const productsHtml = orderData.books.map(item => `
       <tr>
         <td style="border: 1px solid #ddd; padding: 8px;">
@@ -108,9 +108,69 @@ const sendEmailResetPassword = async (email, resetLink) => {
   } catch (error) {
     console.error("Error sending email:", error);
   }
+
+  
+};
+
+
+const sendEmailRequestReturn = async (email, requestData) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.MAIL_ACCOUNT,
+        pass: process.env.MAIL_PASSWORD,
+      },
+    });
+
+    const { returnReason, selectedBooks, orderCode, createAt, status } = requestData;
+    const bookRequests = selectedBooks.map(id => axios.get(`https://3511-14-186-211-38.ngrok-free.app/api/products/${id}`));
+    const responses = await Promise.all(bookRequests);
+    const books = responses.map(response => response.data);
+    const bookDetailsHtml = books.map(book => `
+      <li>
+        <strong>${book.name}</strong><br>
+        <img src="${book.images}" alt="${book.name}" style="width: 100px; height: auto;" /><br>
+      </li>
+    `).join('');
+
+    const info = await transporter.sendMail({
+      from: process.env.MAIL_ACCOUNT,
+      to: email,
+      subject: "Bạn đã gửi yêu cầu đổi trả đến HS BookStore ✔",
+      text: `HS Bookstore sẽ hỗ trợ bạn đổi trả, yêu cầu của bạn sẽ được xử lý trong vòng 24h. Chúc bạn một ngày làm việc thật năng suất.\n\n` +
+            `Thông tin yêu cầu đổi trả:\n` +
+            `- Đơn hàng: ${orderCode}\n` +
+            `- Ngày tạo: ${new Date(createAt).toLocaleDateString()}\n` +
+            `- Trạng thái: ${status === 0 ? 'Chờ xử lý' : 'Đã xử lý'}\n` +
+            `- Lý do: ${returnReason}\n` +
+            `- Sách yêu cầu: ${books.map(book => book.name).join(', ')}\n`,
+      html: `
+        <p>HS Bookstore sẽ hỗ trợ bạn đổi trả, yêu cầu của bạn sẽ được xử lý trong vòng 24h. Chúc bạn một ngày làm việc thật năng suất.</p>
+        <p><strong>Thông tin yêu cầu đổi trả:</strong></p>
+        <ul>
+          <li><strong>Đơn hàng:</strong> ${orderCode}</li>
+          <li><strong>Ngày tạo:</strong> ${new Date(createAt).toLocaleDateString()}</li>
+          <li><strong>Trạng thái:</strong> ${status === 0 ? 'Chờ xử lý' : 'Đã xử lý'}</li>
+          <li><strong>Lý do:</strong> ${returnReason}</li>
+          <li><strong>Sách yêu cầu:</strong></li>
+          <ul>
+            ${bookDetailsHtml}
+          </ul>
+        </ul>
+      `,
+    });
+
+    console.log("Message sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
 };
 
 module.exports = {
   sendEmailCreateOrder,
-  sendEmailResetPassword
+  sendEmailResetPassword,
+  sendEmailRequestReturn
 };

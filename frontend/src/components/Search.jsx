@@ -19,7 +19,7 @@ const Search = () => {
   const [publishers, setPublishers] = useState([]);
   const [selectedPublishers, setSelectedPublishers] = useState([]);
   const [showAllPublishers, setShowAllPublishers] = useState(false);
-  const [showAllCategories, setShowAllCategories] = useState(false); 
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = 12;
   const location = useLocation();
@@ -42,10 +42,14 @@ const Search = () => {
   useEffect(() => {
     const fetchFiltersData = async () => {
       try {
-        const categoriesResponse = await axios.get("http://localhost:5000/api/categories");
+        const categoriesResponse = await axios.get(
+          "http://localhost:5000/api/categories"
+        );
         setCategories(categoriesResponse.data);
 
-        const publishersResponse = await axios.get("http://localhost:5000/api/publishers");
+        const publishersResponse = await axios.get(
+          "http://localhost:5000/api/publishers"
+        );
         setPublishers(publishersResponse.data);
       } catch (error) {
         console.error("Error fetching filters data:", error);
@@ -57,7 +61,9 @@ const Search = () => {
 
   const handleSearch = async (query) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/products/search/${query}`);
+      const response = await axios.get(
+        `http://localhost:5000/api/products/search/${query}`
+      );
       setSearchResults(response.data);
     } catch (error) {
       console.error("Error searching products:", error);
@@ -66,7 +72,9 @@ const Search = () => {
 
   const fetchFavorites = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/favorite/${user._id}`);
+      const response = await axios.get(
+        `http://localhost:5000/favorite/${user._id}`
+      );
       setFavorites(response.data);
     } catch (error) {
       console.error("Error fetching favorites:", error);
@@ -81,8 +89,10 @@ const Search = () => {
 
     try {
       if (isCurrentlyFavorite) {
-        await axios.delete(url, { data: { userId: user._id, bookId: productId } });
-        setFavorites(favorites.filter(id => id !== productId));
+        await axios.delete(url, {
+          data: { userId: user._id, bookId: productId },
+        });
+        setFavorites(favorites.filter((id) => id !== productId));
       } else {
         await axios.post(url, { userId: user._id, bookId: productId });
         setFavorites([...favorites, productId]);
@@ -97,7 +107,9 @@ const Search = () => {
   const handlePublisherChange = (event) => {
     const { value, checked } = event.target;
     setSelectedPublishers((prev) =>
-      checked ? [...prev, value] : prev.filter((publisher) => publisher !== value)
+      checked
+        ? [...prev, value]
+        : prev.filter((publisher) => publisher !== value)
     );
   };
 
@@ -117,7 +129,9 @@ const Search = () => {
     }
 
     if (selectedCategories.length > 0) {
-      categoryCondition = product.categories.some(category => selectedCategories.includes(category));
+      categoryCondition = product.categories.some((category) =>
+        selectedCategories.includes(category)
+      );
     }
 
     return publisherCondition && categoryCondition;
@@ -140,103 +154,74 @@ const Search = () => {
 
       <div className="flex w-full">
         <div className="w-1/5 mt-8 space-y-4">
-          <div className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">Thể loại</h3>
-            <ul className="space-y-2">
-              {categories
-                .filter(category => searchResults.some(product => product.categories.includes(category._id)))
-                .slice(0, shouldShowCategoryButtons ? categories.length : 5)
-                .map(category => (
-                  <li key={category._id} className="flex items-center">
-                    <label className="flex items-center text-gray-700 hover:text-gray-900 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value={category._id}
-                        onChange={handleCategoryChange}
-                        className="mr-2 accent-blue-500"
-                        checked={selectedCategories.includes(category._id)}
-                      />
-                      {category.name}
-                    </label>
-                  </li>
-                ))}
-              {categories.length > 5 && !showAllCategories && (
-                <li>
-                  <button
-                    onClick={() => setShowAllCategories(true)}
-                    className="text-blue-500 font-semibold hover:underline focus:outline-none"
-                  >
-                    Xem thêm ({categories.filter(category => searchResults.some(product => product.categories.includes(category._id))).length - 5})
-                  </button>
-                </li>
-              )}
-              {showAllCategories && (
-                <li>
-                  <button
-                    onClick={() => setShowAllCategories(false)}
-                    className="text-blue-500 font-semibold hover:underline focus:outline-none"
-                  >
-                    Thu gọn
-                  </button>
-                </li>
-              )}
-
-            </ul>
+          <div className="border p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-2">
+              Lọc theo Nhà xuất bản
+            </h3>
+            {publishers
+              .slice(0, showAllPublishers ? publishers.length : 5)
+              .map((publisher) => (
+                <div key={publisher._id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    id={publisher._id}
+                    value={publisher._id}
+                    checked={selectedPublishers.includes(publisher._id)}
+                    onChange={handlePublisherChange}
+                    className="mr-2"
+                  />
+                  <label htmlFor={publisher._id}>{publisher.name}</label>
+                </div>
+              ))}
+            {publishers.length > 5 && (
+              <button
+                onClick={() => setShowAllPublishers(!showAllPublishers)}
+                className="text-blue-500 mt-2"
+              >
+                {showAllPublishers ? "Ẩn bớt" : "Xem thêm"}
+              </button>
+            )}
           </div>
 
-          <div className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">Nhà xuất bản</h3>
-            <ul className="space-y-2">
-              {publishers
-                .filter(publisher => searchResults.some(product => product.publishers === publisher._id))
-                .slice(0, shouldShowPublisherButtons ? publishers.length : 5)
-                .map(publisher => (
-                  <li key={publisher._id} className="flex items-center">
-                    <label className="flex items-center text-gray-700 hover:text-gray-900 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value={publisher._id}
-                        onChange={handlePublisherChange}
-                        className="mr-2 accent-blue-500"
-                        checked={selectedPublishers.includes(publisher._id)}
-                      />
-                      {publisher.name}
-                    </label>
-                  </li>
-                ))}
-              {publishers.length > 5 && !showAllPublishers && (
-                <li>
-                  <button
-                    onClick={() => setShowAllPublishers(true)}
-                    className="text-blue-500 font-semibold hover:underline focus:outline-none"
-                  >
-                    Xem thêm ({publishers.filter(publisher => searchResults.some(product => product.publishers === publisher._id)).length - 5})
-                  </button>
-                </li>
-              )}
-              {showAllPublishers && (
-                <li>
-                  <button
-                    onClick={() => setShowAllPublishers(false)}
-                    className="text-blue-500 font-semibold hover:underline focus:outline-none"
-                  >
-                    Thu gọn
-                  </button>
-                </li>
-              )}
-
-            </ul>
+          <div className="border p-4 rounded-lg shadow-md mt-4">
+            <h3 className="text-lg font-semibold mb-2">Lọc theo Thể loại</h3>
+            {categories
+              .slice(0, showAllCategories ? categories.length : 5)
+              .map((category) => (
+                <div key={category._id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    id={category._id}
+                    value={category._id}
+                    checked={selectedCategories.includes(category._id)}
+                    onChange={handleCategoryChange}
+                    className="mr-2"
+                  />
+                  <label htmlFor={category._id}>{category.name}</label>
+                </div>
+              ))}
+            {categories.length > 5 && (
+              <button
+                onClick={() => setShowAllCategories(!showAllCategories)}
+                className="text-blue-500 mt-2"
+              >
+                {showAllCategories ? "Ẩn bớt" : "Xem thêm"}
+              </button>
+            )}
           </div>
         </div>
 
         <div className="w-4/5">
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full">
             {currentBooks.length > 0 ? (
-              currentBooks.map(product => (
-                <Card key={product._id} className="relative rounded-lg shadow-md hover:shadow-xl">
+              currentBooks.map((product) => (
+                <Card
+                  key={product._id}
+                  className="relative rounded-lg shadow-md hover:shadow-xl"
+                >
                   {product.promotion_percent && (
                     <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                      -                    {product.promotion_percent}%
+                      - {product.promotion_percent}%
                     </div>
                   )}
                   <img
@@ -255,7 +240,10 @@ const Search = () => {
                       {product.name}
                     </h5>
                     <p className="text-gray-500 italic mb-2">
-                      Tác giả: {product.author ? product.author.name : "Unknown Author"}
+                      Tác giả:{" "}
+                      {product.author && product.author.length > 0
+                        ? product.author.map((author) => author.name).join(", ")
+                        : "Unknown Author"}
                     </p>
                     <p className="text-gray-700 mb-2">
                       {product.promotion_price ? (
@@ -300,18 +288,21 @@ const Search = () => {
                 </Card>
               ))
             ) : (
-              <p className="text-center text-gray-500">Không tìm thấy sản phẩm nào.</p>
+              <p className="text-center text-gray-500">
+                Không tìm thấy sản phẩm nào.
+              </p>
             )}
           </div>
         </div>
       </div>
-      <Pagination
-        currentPage={currentPage}
-        itemsPerPage={booksPerPage}
-        totalItems={filteredBooks.length}
-        paginate={paginate}
-      />
-    </div> 
+      {filteredBooks.length > booksPerPage && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredBooks.length / booksPerPage)}
+              paginate={paginate}
+            />
+      )}
+    </div>
   );
 };
 

@@ -49,7 +49,7 @@ const PaymentMethods = ({ paymentMethod, setPaymentMethod }) => {
           </label>
           <img src={ZaloPay} alt="ZaloPay Logo" className="h-12 w-12" />
         </div>
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <input
             type="radio"
             id="vnpay"
@@ -67,8 +67,8 @@ const PaymentMethods = ({ paymentMethod, setPaymentMethod }) => {
             Thanh toán VNPay
           </label>
           <img src={VNpay} alt="VNPay Logo" className="h-12 w-12" />
-        </div>
-        <div className="flex items-center space-x-2">
+        </div> */}
+        {/* <div className="flex items-center space-x-2">
           <input
             type="radio"
             id="momo"
@@ -86,7 +86,7 @@ const PaymentMethods = ({ paymentMethod, setPaymentMethod }) => {
             Thanh toán MoMo
           </label>
           <img src={MoMo} alt="MoMo Logo" className="h-12 w-12" />
-        </div>
+        </div> */}
       </div>
     </div>
   );
