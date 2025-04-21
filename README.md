@@ -24,9 +24,6 @@ This is a full-stack bookstore web application built with **Node.js**, **Express
     └── ...
 ├── docker-compose.yml 
 
-yaml
----
-
 ## ⚙️ Requirements
 
 - Node.js (v18 or later)
