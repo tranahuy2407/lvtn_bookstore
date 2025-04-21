@@ -51,7 +51,7 @@ cd ../frontend
 npm install
 npm run dev
 
-🐳 Option 2: Run with Docker
+### 🐳 Option 2: Run with Docker
 1. Build and run with Docker Compose 
 docker-compose up --build
 2. Access the Application
@@ -59,7 +59,7 @@ Frontend: http://localhost:3000
 
 Backend API: http://localhost:5000
 
-🛠 Technology Stack
+### 🛠 Technology Stack
 Frontend: React, Vite, Redux Toolkit
 
 Backend: Node.js, Express, Mongoose
