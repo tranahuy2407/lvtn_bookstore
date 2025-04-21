@@ -6,12 +6,25 @@ This is a full-stack bookstore web application built with **Node.js**, **Express
 
 ## 📁 Project Structure
 
-. ├── server # Backend (Node.js + Express) │ └── .env # Environment variables (not committed) ├── frontend # Frontend (React + Vite) ├── docker-compose.yml ├── README.md
+. ├── server # Backend (Node.js + Express)
+│ └── .env
+  └── index.js
+  └── routers
+  │ └── ...
+  └── models
+  │ └── ...
+   └── middlewares
+  │ └── ...
+  └── index.js
+  └── Dockerfile
+  
+├── frontend # Frontend (React + Vite) 
+  │ └── .env
+    └── Dockerfile
+    └── ...
+├── docker-compose.yml 
 
 yaml
-Sao chép
-Chỉnh sửa
-
 ---
 
 ## ⚙️ Requirements
@@ -28,60 +41,23 @@ Chỉnh sửa
 
 #### 1. Clone the repository
 
-```bash
-git clone https://github.com/your-username/bookstore-app.git
-cd bookstore-app
+git clone https://github.com/tranahuy2407/lvtn_bookstore.git
+cd lvtn_bookstore
+
 2. Setup the Backend
-bash
-Sao chép
-Chỉnh sửa
 cd server
 npm install
-Create a .env file in the server directory with the following:
-
-ini
-Sao chép
-Chỉnh sửa
-PORT=5000
-DB=mongodb+srv://<username>:<password>@<cluster-url>/test?retryWrites=true&w=majority
-MAIL_ACCOUNT=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-3. Start the Backend
-bash
-Sao chép
-Chỉnh sửa
-npm start
-4. Setup the Frontend
-bash
-Sao chép
-Chỉnh sửa
+npm run dev
+3. Setup the Frontend
+4. 
 cd ../frontend
 npm install
-npm run build
-5. Start the Frontend (using a static server)
-bash
-Sao chép
-Chỉnh sửa
-npx serve -s dist -l 3000
-Open your browser and visit: http://localhost:3000
+npm run dev
 
 🐳 Option 2: Run with Docker
-1. Make sure .env file exists in the server directory
-Example:
-
-ini
-Sao chép
-Chỉnh sửa
-PORT=5000
-DB=mongodb+srv://<username>:<password>@<cluster-url>/test?retryWrites=true&w=majority
-MAIL_ACCOUNT=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-2. Build and run with Docker Compose
-bash
-Sao chép
-Chỉnh sửa
+1. Build and run with Docker Compose 
 docker-compose up --build
-3. Access the Application
+2. Access the Application
 Frontend: http://localhost:3000
 
 Backend API: http://localhost:5000
@@ -96,8 +72,3 @@ Database: MongoDB Atlas
 Mail Service: Nodemailer
 
 Containerization: Docker, Docker Compose
-
-👨‍💻 Author
-Name: Huy Trần
-
-Email: tranahuy247@gmail.com
