@@ -41,31 +41,31 @@ This is a full-stack bookstore web application built with **Node.js**, **Express
 git clone https://github.com/tranahuy2407/lvtn_bookstore.git
 cd lvtn_bookstore
 
-2. Setup the Backend
+#### 2. Setup the Backend
 cd server
 npm install
 npm run dev
-3. Setup the Frontend
-4. 
+#### 3. Setup the Frontend
+#### 4. 
 cd ../frontend
 npm install
 npm run dev
 
 ### 🐳 Option 2: Run with Docker
-1. Build and run with Docker Compose 
+#### 1. Build and run with Docker Compose 
 docker-compose up --build
-2. Access the Application
+#### 2. Access the Application
 Frontend: http://localhost:3000
 
 Backend API: http://localhost:5000
 
 ### 🛠 Technology Stack
-Frontend: React, Vite, Redux Toolkit
+#### Frontend: React, Vite, Redux Toolkit
 
-Backend: Node.js, Express, Mongoose
+#### Backend: Node.js, Express, Mongoose
 
-Database: MongoDB Atlas
+#### Database: MongoDB Atlas
 
-Mail Service: Nodemailer
+#### Mail Service: Nodemailer
 
-Containerization: Docker, Docker Compose
+#### Containerization: Docker, Docker Compose
