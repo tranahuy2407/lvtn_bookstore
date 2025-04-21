@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./server
+    container_name: node_backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/app
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: react_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
